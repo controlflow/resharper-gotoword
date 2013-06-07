@@ -31,5 +31,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
           new SolutionNavigationScope(ScopeData as ISolution, isSearchingInLibs))
       };
     }
+
+    override 
   }
 }

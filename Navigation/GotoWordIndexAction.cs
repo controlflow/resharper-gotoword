@@ -23,7 +23,7 @@ using JetBrains.Util;
 namespace JetBrains.ReSharper.ControlFlow.GoToWord
 {
   [ActionHandler("GotoWordIndex")]
-  public class GoToWordIndexAction : IActionHandler
+  public class GotoWordIndexAction : IActionHandler
   {
     public bool Update(
       IDataContext context, ActionPresentation presentation, DelegateUpdate nextUpdate)

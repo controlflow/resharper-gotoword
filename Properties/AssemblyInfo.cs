@@ -14,7 +14,11 @@ using JetBrains.Application.PluginSupport;
 [assembly: AssemblyVersion("0.9.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
 
+#if RESHARPER7
 [assembly: ActionsXml("ReSharper.GoToWord.R7.Actions.xml")]
+#elif RESHARPER8
+[assembly: ActionsXml("ReSharper.GoToWord.R8.Actions.xml")]
+#endif
 
 [assembly: PluginTitle("Go to word")]
 [assembly: PluginDescription("Words navigation plugin for ReSharper")]

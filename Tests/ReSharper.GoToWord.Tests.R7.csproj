@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{85DE8A94-5F1D-4A2B-A6C7-8AC4BA57CCE8}</ProjectGuid>
+    <ProjectGuid>{A9773C2F-5551-4539-92F7-D9F060D379FF}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>JetBrains.ReSharper.ControlFlow.GoToWord</RootNamespace>
-    <AssemblyName>ReSharper.GoToWord.R7</AssemblyName>
+    <RootNamespace>ReSharper.GoToWord.Tests.R7</RootNamespace>
+    <AssemblyName>ReSharper.GoToWord.Tests.R7</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -19,7 +19,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;JET_MODE_ASSERT; RESHARPER7</DefineConstants>
+    <DefineConstants>JET_MODE_ASSERT;DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -27,7 +27,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;RESHARPER7</DefineConstants>
+    <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -44,22 +44,19 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Navigation\GotoWordSectionProvider.cs" />
-    <Compile Include="Navigation\GotoWordBrowserDescriptor.cs" />
-    <Compile Include="Navigation\GotoWordIndexProvider.cs" />
-    <Compile Include="Navigation\GotoWordIndexController.cs" />
-    <Compile Include="Navigation\GotoWordModelInitializer.cs" />
-    <Compile Include="Navigation\IGotoWordIndexProvider.cs" />
+    <Compile Include="GotoWordTestBaseImpl.cs" />
+    <Compile Include="GotoWordTestBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Navigation\GotoWordIndexAction.cs" />
-    <Compile Include="Navigation\UniversalWordIndexProvider.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Actions.xml" />
+    <ProjectReference Include="..\ReSharper.GoToWord.R7.csproj">
+      <Project>{85de8a94-5f1d-4a2b-a6c7-8ac4ba57cce8}</Project>
+      <Name>ReSharper.GoToWord.R7</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <ReSharperSdkTargets Condition=" '$(ReSharperSdkTargets)' == '' ">$(MSBuildExtensionsPath)\JetBrains\ReSharper.SDK\v7.1</ReSharperSdkTargets>
   </PropertyGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(ReSharperSdkTargets)\Plugin.Targets" />
+  <Import Project="$(ReSharperSdkTargets)\Plugin.Tests.Targets" />
 </Project>
