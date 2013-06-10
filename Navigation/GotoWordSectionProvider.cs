@@ -6,7 +6,11 @@ using JetBrains.Util;
 
 namespace JetBrains.ReSharper.ControlFlow.GoToWord
 {
+#if RESHARPER7
   [FeaturePart]
+#elif RESHARPER8
+  [SolutionFeaturePart]
+#endif
   public class GotoWordSectionProvider : OccurenceSectionProvider
   {
     public override bool IsApplicable(OccurenceBrowserDescriptor descriptor)

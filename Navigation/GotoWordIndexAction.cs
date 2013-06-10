@@ -10,6 +10,7 @@ using JetBrains.ProjectModel;
 using JetBrains.ReSharper.Feature.Services.Goto;
 using JetBrains.ReSharper.Feature.Services.Search;
 using JetBrains.ReSharper.Features.Common.FindResultsBrowser;
+using JetBrains.ReSharper.Features.Common.GoToByName.Controllers;
 using JetBrains.Threading;
 using JetBrains.UI.Application;
 using JetBrains.UI.Application.Progress;
@@ -50,6 +51,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
 
           EnableShowInFindResults(controller, definition);
 
+#if RESHARPER7
           new GotoByNameMenu(definition, controller.Model,
                              instance.GetComponent<IThreading>(),
                              instance.GetComponent<ISettingsStore>(),
@@ -62,14 +64,24 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
                              instance.GetComponent<IActionManager>(),
                              instance.GetComponent<IShortcutManager>(),
                              instance.GetComponent<ITheming>());
+
+#elif RESHARPER8
+
+          new GotoByNameMenu(
+            instance.GetComponent<GotoByNameMenuComponent>(),
+            definition, controller.Model,
+            instance.GetComponent<UIApplication>().MainWindow,
+            context.GetData(GotoByNameDataConstants.CurrentSearchText));
+#endif
+
+
+
         });
     }
 
     private static void EnableShowInFindResults(
       GotoWordIndexController controller, LifetimeDefinition definition)
     {
-      
-
       controller.FuncEtcItemExecute.Value = () =>
         Shell.Instance.Locks.ExecuteOrQueueReadLock("ShowInFindResults", () =>
       {
@@ -88,7 +100,16 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
           List<Pair<IOccurence, MatchingInfo>> occurences;
           using (ReadLockCookie.Create())
           {
+#if RESHARPER7
             occurences = controller.GetOccurencesToPresent(filterString, -1);
+#elif RESHARPER8
+            occurences = new List<Pair<IOccurence, MatchingInfo>>();
+            controller.ConsumePresentableItems(filterString, -1, (items, behavior) =>
+            {
+              foreach (var item in items)
+                occurences.Add(Pair.Of(item.Occurence, item.MatchingInfo));
+            });
+#endif
           }
 
           if (occurences.Any() && !indicator.IsCanceled)
