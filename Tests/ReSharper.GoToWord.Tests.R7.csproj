@@ -48,12 +48,6 @@
     <Compile Include="GotoWordTestBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ReSharper.GoToWord.R7.csproj">
-      <Project>{85de8a94-5f1d-4a2b-a6c7-8ac4ba57cce8}</Project>
-      <Name>ReSharper.GoToWord.R7</Name>
-    </ProjectReference>
-  </ItemGroup>
   <PropertyGroup>
     <ReSharperSdkTargets Condition=" '$(ReSharperSdkTargets)' == '' ">$(MSBuildExtensionsPath)\JetBrains\ReSharper.SDK\v7.1</ReSharperSdkTargets>
   </PropertyGroup>

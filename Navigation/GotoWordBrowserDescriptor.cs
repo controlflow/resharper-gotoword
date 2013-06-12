@@ -24,7 +24,6 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
       DrawElementExtensions = true;
       myModel = new TreeSectionModel();
 
-
       using (ReadLockCookie.Create())
         SetResults(occurences.ToList(), indicator);
     }

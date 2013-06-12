@@ -8,20 +8,17 @@ using JetBrains.ReSharper.Feature.Services.Goto.ChainedProviders;
 using JetBrains.ReSharper.Feature.Services.Search;
 using JetBrains.ReSharper.Features.Common.GoToByName;
 using JetBrains.ReSharper.Features.Common.GoToByName.Controllers;
+using JetBrains.Util;
 
 namespace JetBrains.ReSharper.ControlFlow.GoToWord
 {
   public class GotoWordIndexController
-    : GotoControllerBase<IGotoWordIndexProvider, IChainedProjectElementProvider>
+    : GotoControllerBase<IGotoWordIndexProvider, IGotoWordIndexProvider>
   {
     public GotoWordIndexController(
       [NotNull] Lifetime lifetime, [NotNull] ISolution solution,
       LibrariesFlag librariesFlag, [NotNull] IShellLocks locks)
-#if RESHARPER7
-      : base(lifetime, solution, solution, librariesFlag, locks)
-#elif RESHARPER8
       : base(lifetime, solution, solution, librariesFlag, locks, true)
-#endif
     {
       var manager = GotoByNameModelManager.GetInstance(solution);
       manager.ProcessModel<GotoWordModelInitializer>(Model, lifetime);
@@ -31,10 +28,11 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
 
     protected override ICollection<ChainedNavigationItemData> InitScopes(bool isSearchingInLibs)
     {
-      return new[] {
-        new ChainedNavigationItemData(null,
-          new SolutionNavigationScope(ScopeData as ISolution, isSearchingInLibs))
-      };
+      return EmptyList<ChainedNavigationItemData>.InstanceList;
+      //return new[] {
+      //  new ChainedNavigationItemData(null,
+      //    new SolutionNavigationScope(ScopeData as ISolution, isSearchingInLibs))
+      //};
     }
   }
 }

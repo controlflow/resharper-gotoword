@@ -4,21 +4,15 @@ using JetBrains.ActionManagement;
 using JetBrains.Application;
 using JetBrains.Application.DataContext;
 using JetBrains.Application.Progress;
-using JetBrains.Application.Settings;
 using JetBrains.DataFlow;
 using JetBrains.ProjectModel;
 using JetBrains.ReSharper.Feature.Services.Goto;
 using JetBrains.ReSharper.Feature.Services.Search;
 using JetBrains.ReSharper.Features.Common.FindResultsBrowser;
-using JetBrains.ReSharper.Features.Common.GoToByName.Controllers;
-using JetBrains.Threading;
 using JetBrains.UI.Application;
 using JetBrains.UI.Application.Progress;
 using JetBrains.UI.Controls.GotoByName;
 using JetBrains.UI.GotoByName;
-using JetBrains.UI.PopupWindowManager;
-using JetBrains.UI.Theming;
-using JetBrains.UI.Tooltips;
 using JetBrains.Util;
 
 namespace JetBrains.ReSharper.ControlFlow.GoToWord
@@ -45,38 +39,18 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
       var locks = instance.GetComponent<IShellLocks>();
 
       Lifetimes.Define(solution.GetLifetime(), FAtomic: (definition, lifetime) =>
-        {
-          var controller = new GotoWordIndexController(
-            lifetime, solution, LibrariesFlag.SolutionOnly, locks);
+      {
+        var controller = new GotoWordIndexController(
+          lifetime, solution, LibrariesFlag.SolutionOnly, locks);
 
-          EnableShowInFindResults(controller, definition);
+        EnableShowInFindResults(controller, definition);
 
-#if RESHARPER7
-          new GotoByNameMenu(definition, controller.Model,
-                             instance.GetComponent<IThreading>(),
-                             instance.GetComponent<ISettingsStore>(),
-                             instance.GetComponent<ITooltipManager>(),
-                             instance.GetComponent<UIApplication>().MainWindow,
-                             instance.GetComponent<PopupWindowManager>(),
-                             instance.GetComponent<WindowsMessageHookManager>(),
-                             instance.GetComponent<MainWindowPopupWindowContext>(),
-                             context.GetData(GotoByNameDataConstants.CurrentSearchText),
-                             instance.GetComponent<IActionManager>(),
-                             instance.GetComponent<IShortcutManager>(),
-                             instance.GetComponent<ITheming>());
-
-#elif RESHARPER8
-
-          new GotoByNameMenu(
-            instance.GetComponent<GotoByNameMenuComponent>(),
-            definition, controller.Model,
-            instance.GetComponent<UIApplication>().MainWindow,
-            context.GetData(GotoByNameDataConstants.CurrentSearchText));
-#endif
-
-
-
-        });
+        new GotoByNameMenu(
+          instance.GetComponent<GotoByNameMenuComponent>(),
+          definition, controller.Model,
+          instance.GetComponent<UIApplication>().MainWindow,
+          context.GetData(GotoByNameDataConstants.CurrentSearchText));
+      });
     }
 
     private static void EnableShowInFindResults(
@@ -92,7 +66,8 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
 
         GotoWordBrowserDescriptor descriptor = null;
         var taskExecutor = Shell.Instance.GetComponent<UITaskExecutor>();
-        if (!taskExecutor.FreeThreaded.ExecuteTask("Show Files In Find Results", TaskCancelable.Yes, indicator =>
+        if (!taskExecutor.FreeThreaded.ExecuteTask(
+          "Show Files In Find Results", TaskCancelable.Yes, indicator =>
         {
           indicator.TaskName = string.Format("Collecting words matching '{0}'", filterString);
           indicator.Start(1);
@@ -100,16 +75,12 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
           List<Pair<IOccurence, MatchingInfo>> occurences;
           using (ReadLockCookie.Create())
           {
-#if RESHARPER7
-            occurences = controller.GetOccurencesToPresent(filterString, -1);
-#elif RESHARPER8
             occurences = new List<Pair<IOccurence, MatchingInfo>>();
             controller.ConsumePresentableItems(filterString, -1, (items, behavior) =>
             {
               foreach (var item in items)
                 occurences.Add(Pair.Of(item.Occurence, item.MatchingInfo));
             });
-#endif
           }
 
           if (occurences.Any() && !indicator.IsCanceled)

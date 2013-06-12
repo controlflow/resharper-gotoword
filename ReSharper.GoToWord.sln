@@ -1,11 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReSharper.GoToWord.R7", "ReSharper.GoToWord.R7.csproj", "{85DE8A94-5F1D-4A2B-A6C7-8AC4BA57CCE8}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReSharper.GoToWord.R8", "ReSharper.GoToWord.R8.csproj", "{A95C47FD-9460-43B0-82D1-CB6DE6D67981}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReSharper.GoToWord.Tests.R7", "Tests\ReSharper.GoToWord.Tests.R7.csproj", "{A9773C2F-5551-4539-92F7-D9F060D379FF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,18 +9,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{85DE8A94-5F1D-4A2B-A6C7-8AC4BA57CCE8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{85DE8A94-5F1D-4A2B-A6C7-8AC4BA57CCE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{85DE8A94-5F1D-4A2B-A6C7-8AC4BA57CCE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{85DE8A94-5F1D-4A2B-A6C7-8AC4BA57CCE8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A95C47FD-9460-43B0-82D1-CB6DE6D67981}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A95C47FD-9460-43B0-82D1-CB6DE6D67981}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A95C47FD-9460-43B0-82D1-CB6DE6D67981}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A95C47FD-9460-43B0-82D1-CB6DE6D67981}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A9773C2F-5551-4539-92F7-D9F060D379FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A9773C2F-5551-4539-92F7-D9F060D379FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A9773C2F-5551-4539-92F7-D9F060D379FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A9773C2F-5551-4539-92F7-D9F060D379FF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
