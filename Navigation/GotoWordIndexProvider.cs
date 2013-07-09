@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using JetBrains.Application;
+using JetBrains.ProjectModel;
 using JetBrains.ReSharper.Feature.Services.Goto;
+using JetBrains.ReSharper.Feature.Services.Occurences;
 using JetBrains.ReSharper.Feature.Services.Search;
 using JetBrains.ReSharper.Psi;
 using JetBrains.Text;
-using JetBrains.TextControl.Graphics;
 using JetBrains.Util;
 using System.Linq;
 using JetBrains.DocumentModel;
@@ -14,7 +15,7 @@ using JetBrains.ReSharper.Feature.Services.Navigation.Occurences;
 
 namespace JetBrains.ReSharper.ControlFlow.GoToWord
 {
-  [SolutionFeaturePart]
+  [ShellFeaturePart]
   public sealed class GotoWordIndexProvider : IGotoWordIndexProvider
   {
     public bool IsApplicable(
@@ -53,6 +54,8 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
       sourceFiles.AddRange(wordIndex.GetFilesContainingWord(words));
       sourceFiles.AddRange(wordIndex.GetFilesContainingWord(filterText));
 
+      
+
       var occurences = new List<IOccurence>();
 
       var caseInsensitive = (scope.ExtendedSearchFlag == LibrariesFlag.SolutionOnly);
@@ -63,10 +66,14 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
           var buffer = sourceFile.Document.Buffer;
           if (buffer == null) continue;
 
+          if (sourceFile.Properties.IsNonUserFile) continue;
+
           for (var index = 0; (index = buffer.IndexOf(filterText, index)) != -1; index++)
           {
             var range = TextRange.FromLength(index, filterText.Length);
-            var occurence = new RangeOccurence(sourceFile, new DocumentRange(sourceFile.Document, range));
+            var occurence = new RangeOccurence(
+              sourceFile, new DocumentRange(sourceFile.Document, range), OccurenceType.TextualOccurence,
+              new OccurencePresentationOptions());
             occurences.Add(occurence);
 
             if (checkCancelled()) break;
@@ -81,6 +88,8 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
         {
           var text = sourceFile.Document.GetText();
           if (text == null) continue;
+
+          if (sourceFile.Properties.IsNonUserFile) continue;
 
           for (var index = 0; (index = text.IndexOf(
             filterText, index, StringComparison.OrdinalIgnoreCase)) != -1; index++)
@@ -115,6 +124,70 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
     {
       var occurences = gotoContext.GetData(TextualOccurances);
       return occurences ?? EmptyList<IOccurence>.InstanceList;
+    }
+  }
+
+  [PsiComponent]
+  public class A : IPsiSourceFilePropertiesProvider
+  {
+    public IPsiSourceFileProperties GetPsiProperties(
+      IPsiSourceFileProperties prevProperties, IProject project,
+      IProjectFile projectFile, IPsiSourceFile sourceFile)
+    {
+      return new Boo(prevProperties);
+    }
+
+    public double Order { get { return 100; } }
+  }
+
+  public class Boo : IPsiSourceFileProperties
+  {
+    private readonly IPsiSourceFileProperties myPrevProperties;
+
+    public Boo(IPsiSourceFileProperties prevProperties)
+    {
+      myPrevProperties = prevProperties;
+    }
+
+    public IEnumerable<string> GetPreImportedNamespaces()
+    {
+      return myPrevProperties.GetPreImportedNamespaces();
+    }
+
+    public string GetDefaultNamespace()
+    {
+      return myPrevProperties.GetDefaultNamespace();
+    }
+
+    public ICollection<PreProcessingDirective> GetDefines()
+    {
+      return myPrevProperties.GetDefines();
+    }
+
+    public bool ShouldBuildPsi
+    {
+      get { return myPrevProperties.ShouldBuildPsi; }
+    }
+
+    public bool IsGeneratedFile
+    {
+      get { return myPrevProperties.IsGeneratedFile; }
+    }
+
+    public bool IsICacheParticipant
+    {
+      //get { return myPrevProperties.IsICacheParticipant; }
+      get { return true; }
+    }
+
+    public bool ProvidesCodeModel
+    {
+      get { return myPrevProperties.ProvidesCodeModel; }
+    }
+
+    public bool IsNonUserFile
+    {
+      get { return myPrevProperties.IsNonUserFile; }
     }
   }
 }
