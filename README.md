@@ -1,11 +1,14 @@
 ReSharper Go to Word plugin
 ---------------------------
 
-This plugin allows you to utilize the power of R# caches and occurances browsing
-UI capabilities (with various groupings and previews) for simple textual search.
+This plugin allows you to utilize the power of R# caches and find results browser
+UI capabilities (various groupings and previews) for simple textual search.
 
 #### Features
 
+* Search whole solution for textual occurances in any types of files
+* Case sensitive or insensitive search, powered by R# caches
+* Standard R# "find results" dialog with grouping and previews
 ![occurances](/Content/occurances.png)
 
 #### Installation
