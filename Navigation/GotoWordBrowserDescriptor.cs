@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using JetBrains.Annotations;
 using JetBrains.Application;
 using JetBrains.Application.Progress;
@@ -11,13 +10,14 @@ using JetBrains.TreeModels;
 
 namespace JetBrains.ReSharper.ControlFlow.GoToWord
 {
-  public class GotoWordBrowserDescriptor : OccurenceBrowserDescriptor
+  public sealed class GotoWordBrowserDescriptor : OccurenceBrowserDescriptor
   {
-    private readonly TreeSectionModel myModel;
+    [NotNull] private readonly TreeSectionModel myModel;
 
     public GotoWordBrowserDescriptor(
-      ISolution solution, string pattern,
-      [NotNull] IEnumerable<IOccurence> occurences, IProgressIndicator indicator = null)
+      [NotNull] ISolution solution, [NotNull] string pattern,
+      [NotNull] List<IOccurence> occurences,
+      [CanBeNull] IProgressIndicator indicator = null)
       : base(solution)
     {
       Title.Value = string.Format("Textual occurrences of '{0}'", pattern);
@@ -25,7 +25,10 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
       myModel = new TreeSectionModel();
 
       using (ReadLockCookie.Create())
-        SetResults(occurences.ToList(), indicator);
+      {
+        // ReSharper disable once DoNotCallOverridableMethodsInConstructor
+        SetResults(occurences, indicator);
+      }
     }
 
     public override TreeModel Model
