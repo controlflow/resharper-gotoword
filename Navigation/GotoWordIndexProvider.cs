@@ -128,23 +128,23 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
   }
 
   [PsiComponent]
-  public class A : IPsiSourceFilePropertiesProvider
+  public class HackPropertiesProvider : IPsiSourceFilePropertiesProvider
   {
     public IPsiSourceFileProperties GetPsiProperties(
       IPsiSourceFileProperties prevProperties, IProject project,
       IProjectFile projectFile, IPsiSourceFile sourceFile)
     {
-      return new Boo(prevProperties);
+      return new HackProperties(prevProperties);
     }
 
     public double Order { get { return 100; } }
   }
 
-  public class Boo : IPsiSourceFileProperties
+  public class HackProperties : IPsiSourceFileProperties
   {
     private readonly IPsiSourceFileProperties myPrevProperties;
 
-    public Boo(IPsiSourceFileProperties prevProperties)
+    public HackProperties(IPsiSourceFileProperties prevProperties)
     {
       myPrevProperties = prevProperties;
     }
@@ -166,7 +166,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
 
     public bool ShouldBuildPsi
     {
-      get { return myPrevProperties.ShouldBuildPsi; }
+      get { return true; }
     }
 
     public bool IsGeneratedFile

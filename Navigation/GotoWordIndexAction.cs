@@ -50,7 +50,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
 
           var gotoByNameMenu = shell.GetComponent<GotoByNameMenuComponent>();
           var uiApplication = shell.GetComponent<UIApplication>();
-          var initialSearchText = context.GetData(GotoByNameDataConstants.CurrentSearchText);
+          var initialText = context.GetData(GotoByNameDataConstants.CurrentSearchText);
 
           var textControl = context.GetData(DataConstants.TEXT_CONTROL);
           if (textControl != null)
@@ -62,7 +62,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
               if (docRange.Length > 0)
               {
                 var selectedText = textControl.Document.GetText(docRange);
-                initialSearchText = new GotoByNameDataConstants.SearchTextData(
+                initialText = new GotoByNameDataConstants.SearchTextData(
                   selectedText, TextRange.FromLength(selectedText.Length));
               }
             }
@@ -70,7 +70,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
 
           new GotoByNameMenu(
             gotoByNameMenu, definition, controller.Model,
-            uiApplication.MainWindow, initialSearchText);
+            uiApplication.MainWindow, initialText);
         });
     }
 

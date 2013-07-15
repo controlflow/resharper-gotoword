@@ -6,7 +6,7 @@ using JetBrains.Util;
 
 namespace JetBrains.ReSharper.ControlFlow.GoToWord
 {
-  [SolutionFeaturePart]
+  [ShellFeaturePart]
   public class GotoWordSectionProvider : OccurenceSectionProvider
   {
     public override bool IsApplicable(OccurenceBrowserDescriptor descriptor)
