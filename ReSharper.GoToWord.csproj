@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>JetBrains.ReSharper.ControlFlow.GoToWord</RootNamespace>
-    <AssemblyName>ReSharper.GoToWord.R8</AssemblyName>
+    <AssemblyName>ReSharper.GoToWord</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />

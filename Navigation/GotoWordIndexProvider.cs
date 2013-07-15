@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using JetBrains.Application;
+using JetBrains.Application.Env;
+using JetBrains.Application.Threading;
 using JetBrains.ProjectModel;
 using JetBrains.ReSharper.ControlFlow.GoToWord.Hacks;
 using JetBrains.ReSharper.Feature.Services.Goto;
@@ -31,11 +33,11 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
       GotoContext gotoContext, IdentifierMatcher matcher,
       INavigationScope containingScope, CheckForInterrupt checkForInterrupt)
     {
-      yield break;
+      return EmptyList<ChainedNavigationItemData>.InstanceList;
     }
 
-    [NotNull] private static readonly Key<List<IOccurence>>
-      TextualOccurances = new Key<List<IOccurence>>("TextualOccurances");
+    [NotNull] private static readonly Key<List<IOccurence>> TextualOccurances = new Key<List<IOccurence>>("TextualOccurances");
+    [NotNull] private static readonly Key<object> FirstTimeLookup = new Key<object>("FirstTimeLookup");
 
     public IEnumerable<MatchingInfo> FindMatchingInfos(
       IdentifierMatcher matcher, INavigationScope scope,
@@ -52,32 +54,15 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
         .GetWords(filterText)
         .OrderByDescending(word => word.Length).FirstOrDefault();
 
-      var mm = solution.GetComponent<IPsiModules>();
-      var pim = solution.GetComponent<IPersistentIndexManager>();
-      foreach (var project in scope.GetSolution().GetAllProjects())
+      if (gotoContext.GetData(FirstTimeLookup) == null)
       {
-        foreach (var psiModule in mm.GetPsiModules(project))
+        // force word index to process all not processed files
+        if (PrepareSolutionFiles(solution, wordCache, checkCancelled))
         {
-          foreach (var psiSourceFile in psiModule.SourceFiles)
-          {
-            var file = psiSourceFile;
-            if (!psiSourceFile.Properties.ShouldBuildPsi)
-            {
-              file = new SourceFileToBuildCache(psiSourceFile);
-            }
-
-            if (!wordCache.UpToDate(file))
-            {
-              var data = wordCache.Build(psiSourceFile, false);
-              wordCache.Merge(psiSourceFile, data);
-              pim.OnPersistentCachesUpdated(psiSourceFile);
-            }
-
-            if (checkCancelled()) break;
-          }
+          gotoContext.PutData(FirstTimeLookup, FirstTimeLookup);
         }
       }
-      
+
       if (words == null) return EmptyList<MatchingInfo>.InstanceList;
 
       var sourceFiles = new HashSet<IPsiSourceFile>();
@@ -152,6 +137,49 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
     {
       var occurences = gotoContext.GetData(TextualOccurances);
       return occurences ?? EmptyList<IOccurence>.InstanceList;
+    }
+
+    private static bool PrepareSolutionFiles(
+      [NotNull] ISolution solution, [NotNull] ICache wordIndex,
+      [NotNull] CheckForInterrupt checkCancelled)
+    {
+      var locks = solution.GetComponent<IShellLocks>();
+      var configurations = solution.GetComponent<RunsProducts.ProductConfigurations>();
+      var persistentIndexManager = solution.GetComponent<IPersistentIndexManager>();
+      var psiModules = solution.GetComponent<IPsiModules>();
+
+      using (var pool = new MultiCoreFibersPool("Updating word index cache", locks, configurations))
+      using (var fibers = pool.Create("Updating word index cache for 'go to word' navigation"))
+      {
+        foreach (var project in solution.GetAllProjects())
+        foreach (var module in psiModules.GetPsiModules(project))
+        {
+          foreach (var psiSourceFile in module.SourceFiles)
+          {
+            // workaround WordIndex2 implementation, to force indexing
+            // unknown project file types like *.txt files and other
+
+            var fileToCheck = psiSourceFile.Properties.ShouldBuildPsi
+              ? psiSourceFile
+              : new SourceFileToBuildCache(psiSourceFile);
+
+            if (!wordIndex.UpToDate(fileToCheck))
+            {
+              var sourceFile = psiSourceFile;
+              fibers.EnqueueJob(() =>
+              {
+                var data = wordIndex.Build(sourceFile, false);
+                wordIndex.Merge(sourceFile, data);
+                persistentIndexManager.OnPersistentCachesUpdated(sourceFile);
+              });
+            }
+
+            if (checkCancelled()) return false;
+          }
+        }
+      }
+
+      return true;
     }
   }
 }
