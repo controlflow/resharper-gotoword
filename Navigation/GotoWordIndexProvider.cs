@@ -7,6 +7,8 @@ using JetBrains.ReSharper.Feature.Services.Goto;
 using JetBrains.ReSharper.Feature.Services.Occurences;
 using JetBrains.ReSharper.Feature.Services.Search;
 using JetBrains.ReSharper.Psi;
+using JetBrains.ReSharper.Psi.Caches;
+using JetBrains.ReSharper.Psi.Modules;
 using JetBrains.Text;
 using JetBrains.Util;
 using System.Linq;
@@ -44,17 +46,34 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
       var filterText = matcher.Filter;
 
       var wordIndex = solution.GetPsiServices().WordIndex;
+      var wordCache = (ICache) wordIndex;
       var words = wordIndex
         .GetWords(filterText)
         .OrderByDescending(word => word.Length).FirstOrDefault();
 
+      var mm = solution.GetComponent<IPsiModules>();
+      var pim = solution.GetComponent<IPersistentIndexManager>();
+      foreach (var project in scope.GetSolution().GetAllProjects())
+      {
+        foreach (var psiModule in mm.GetPsiModules(project))
+        {
+          foreach (var psiSourceFile in psiModule.SourceFiles)
+          {
+            if (!wordCache.UpToDate(psiSourceFile))
+            {
+              var data = wordCache.Build(psiSourceFile, false);
+              wordCache.Merge(psiSourceFile, data);
+              pim.OnPersistentCachesUpdated(psiSourceFile);
+            }
+          }
+        }
+      }
+      
       if (words == null) return EmptyList<MatchingInfo>.InstanceList;
 
       var sourceFiles = new HashSet<IPsiSourceFile>();
       sourceFiles.AddRange(wordIndex.GetFilesContainingWord(words));
       sourceFiles.AddRange(wordIndex.GetFilesContainingWord(filterText));
-
-      
 
       var occurences = new List<IOccurence>();
 
@@ -124,70 +143,6 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
     {
       var occurences = gotoContext.GetData(TextualOccurances);
       return occurences ?? EmptyList<IOccurence>.InstanceList;
-    }
-  }
-
-  [PsiComponent]
-  public class HackPropertiesProvider : IPsiSourceFilePropertiesProvider
-  {
-    public IPsiSourceFileProperties GetPsiProperties(
-      IPsiSourceFileProperties prevProperties, IProject project,
-      IProjectFile projectFile, IPsiSourceFile sourceFile)
-    {
-      return new HackProperties(prevProperties);
-    }
-
-    public double Order { get { return 100; } }
-  }
-
-  public class HackProperties : IPsiSourceFileProperties
-  {
-    private readonly IPsiSourceFileProperties myPrevProperties;
-
-    public HackProperties(IPsiSourceFileProperties prevProperties)
-    {
-      myPrevProperties = prevProperties;
-    }
-
-    public IEnumerable<string> GetPreImportedNamespaces()
-    {
-      return myPrevProperties.GetPreImportedNamespaces();
-    }
-
-    public string GetDefaultNamespace()
-    {
-      return myPrevProperties.GetDefaultNamespace();
-    }
-
-    public ICollection<PreProcessingDirective> GetDefines()
-    {
-      return myPrevProperties.GetDefines();
-    }
-
-    public bool ShouldBuildPsi
-    {
-      get { return true; }
-    }
-
-    public bool IsGeneratedFile
-    {
-      get { return myPrevProperties.IsGeneratedFile; }
-    }
-
-    public bool IsICacheParticipant
-    {
-      //get { return myPrevProperties.IsICacheParticipant; }
-      get { return true; }
-    }
-
-    public bool ProvidesCodeModel
-    {
-      get { return myPrevProperties.ProvidesCodeModel; }
-    }
-
-    public bool IsNonUserFile
-    {
-      get { return myPrevProperties.IsNonUserFile; }
     }
   }
 }
