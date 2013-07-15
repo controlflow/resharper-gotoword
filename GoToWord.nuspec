@@ -7,7 +7,7 @@
     <authors>Alexander Shvedov</authors>
     <owners>controlflow</owners>
     <projectUrl>https://github.com/controlflow/resharper-gotoword</projectUrl>
-    <iconUrl>https://github.com/controlflow/resharper-gotoword/blob/master/Content/icon.png</iconUrl>
+    <iconUrl>https://raw.github.com/controlflow/resharper-gotoword/master/Content/icon.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Textual navigation plugin for ReSharper</description>
     <copyright>Copyright © Alexander Shvedov, 2013</copyright>
