@@ -45,12 +45,14 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="GoToWord.nuspec" />
-    <Compile Include="Navigation\GotoWordBrowserDescriptor.cs" />
+    <Compile Include="Navigation\Presentation\GotoWordBrowserDescriptor.cs" />
     <Compile Include="Navigation\GotoWordIndexAction.cs" />
     <Compile Include="Navigation\GotoWordIndexController.cs" />
     <Compile Include="Navigation\GotoWordIndexProvider.cs" />
-    <Compile Include="Navigation\GotoWordModelInitializer.cs" />
-    <Compile Include="Navigation\GotoWordSectionProvider.cs" />
+    <Compile Include="Navigation\Presentation\GotoWordModelInitializer.cs" />
+    <Compile Include="Navigation\Presentation\GotoWordSectionProvider.cs" />
+    <Compile Include="Hacks\SourceFileToBuildCache.cs" />
+    <Compile Include="Hacks\SourceFileToBuildCacheProperties.cs" />
     <Compile Include="Navigation\IGotoWordIndexProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -60,9 +62,7 @@
   <ItemGroup>
     <None Include="Readme.md" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Caches\" />
-  </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <ReSharperSdkTargets Condition=" '$(ReSharperSdkTargets)' == '' ">$(MSBuildExtensionsPath)\JetBrains\ReSharper.SDK\v8.0</ReSharperSdkTargets>
   </PropertyGroup>

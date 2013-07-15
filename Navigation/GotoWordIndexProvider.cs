@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using JetBrains.Application;
 using JetBrains.ProjectModel;
+using JetBrains.ReSharper.ControlFlow.GoToWord.Hacks;
 using JetBrains.ReSharper.Feature.Services.Goto;
 using JetBrains.ReSharper.Feature.Services.Occurences;
 using JetBrains.ReSharper.Feature.Services.Search;
@@ -59,12 +60,20 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
         {
           foreach (var psiSourceFile in psiModule.SourceFiles)
           {
-            if (!wordCache.UpToDate(psiSourceFile))
+            var file = psiSourceFile;
+            if (!psiSourceFile.Properties.ShouldBuildPsi)
+            {
+              file = new SourceFileToBuildCache(psiSourceFile);
+            }
+
+            if (!wordCache.UpToDate(file))
             {
               var data = wordCache.Build(psiSourceFile, false);
               wordCache.Merge(psiSourceFile, data);
               pim.OnPersistentCachesUpdated(psiSourceFile);
             }
+
+            if (checkCancelled()) break;
           }
         }
       }
