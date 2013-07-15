@@ -1,0 +1,22 @@
+﻿<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>ReSharper.GoToWord</id>
+    <version>0.1-EAP</version>
+    <title>ReSharper Go to Word plugin</title>
+    <authors>Alexander Shvedov</authors>
+    <owners>controlflow</owners>
+    <projectUrl>https://github.com/controlflow/resharper-gotoword</projectUrl>
+    <iconUrl>TODO</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Textual navigation plugin for ReSharper</description>
+    <copyright>Copyright © Alexander Shvedov, 2013</copyright>
+    <dependencies>
+      <dependency id="ReSharper" version="8.0" />
+    </dependencies>
+    <tags>navigation search words text word index</tags>
+  </metadata>
+  <files>
+    <file src="bin\$Configuration$\**\*.*" target="ReSharper\v8.0\plugins\" />
+  </files>
+</package>

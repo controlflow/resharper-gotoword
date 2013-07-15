@@ -6,13 +6,13 @@ UI capabilities (with various groupings and previews) for simple textual search.
 
 #### Features
 
-
+![occurances](/Content/occurances.png)
 
 #### Installation
 
 This plugin is available in ReSharper 8 Extension Gallery:
 
-pic
+TODO: pic
 
 #### Known issues
 

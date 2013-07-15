@@ -44,6 +44,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="GoToWord.nuspec" />
     <Compile Include="Navigation\GotoWordBrowserDescriptor.cs" />
     <Compile Include="Navigation\GotoWordIndexAction.cs" />
     <Compile Include="Navigation\GotoWordIndexController.cs" />
