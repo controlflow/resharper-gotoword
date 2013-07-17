@@ -24,7 +24,10 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
       IDataContext context, ActionPresentation presentation, DelegateUpdate nextUpdate)
     {
       var solution = context.GetData(ProjectModel.DataContext.DataConstants.SOLUTION);
-      return (solution != null);
+      var isUpdate = (solution != null);
+      presentation.Visible = isUpdate;
+
+      return isUpdate;
     }
 
     public void Execute(IDataContext context, DelegateExecute nextExecute)

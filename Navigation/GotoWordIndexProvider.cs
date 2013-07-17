@@ -64,7 +64,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
         if (gotoContext.GetData(FirstTimeLookup) == null)
         {
           // force word index to process all not processed files
-          if (PrepareSolutionFiles(solution, wordCache, checkCancelled))
+          if (PrepareWordIndex(solution, wordCache, checkCancelled))
             gotoContext.PutData(FirstTimeLookup, FirstTimeLookup);
         }
 
@@ -73,6 +73,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
         var sourceFiles = new HashSet<IPsiSourceFile>();
         sourceFiles.AddRange(wordIndex.GetFilesContainingWord(words));
         sourceFiles.AddRange(wordIndex.GetFilesContainingWord(filterText));
+        sourceFiles.RemoveWhere(sf => sf.ToProjectFile() == null);
 
         foreach (var sourceFile in sourceFiles)
         {
@@ -124,21 +125,18 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
       return occurences ?? EmptyList<IOccurence>.InstanceList;
     }
 
-    private static bool PrepareSolutionFiles(
+    private static bool PrepareWordIndex(
       [NotNull] ISolution solution, [NotNull] ICache wordIndex,
       [NotNull] CheckForInterrupt checkCancelled)
     {
       var locks = solution.GetComponent<IShellLocks>();
       var configurations = solution.GetComponent<RunsProducts.ProductConfigurations>();
       var persistentIndexManager = solution.GetComponent<IPersistentIndexManager>();
-      var psiModules = solution.GetComponent<IPsiModules>();
 
       using (var pool = new MultiCoreFibersPool("Updating word index cache", locks, configurations))
       using (var fibers = pool.Create("Updating word index cache for 'go to word' navigation"))
       {
-        foreach (var project in solution.GetAllProjects())
-        foreach (var module in psiModules.GetPsiModules(project))
-        foreach (var psiSourceFile in module.SourceFiles)
+        foreach (var psiSourceFile in GetAllSolutionFiles(solution))
         {
           // workaround WordIndex2 implementation, to force indexing
           // unknown project file types like *.txt files and other
@@ -164,20 +162,22 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
       return true;
     }
 
-    private static void FindTextual([NotNull] string filterText, [NotNull] ISolution solution,
-      [NotNull] List<IOccurence> occurences, [NotNull] CheckForInterrupt checkCancelled)
+    private static void FindTextual([NotNull] string filterText,
+      [NotNull] ISolution solution, [NotNull] List<IOccurence> occurences,
+      [NotNull] CheckForInterrupt checkCancelled)
     {
       var locks = solution.GetComponent<IShellLocks>();
       var configurations = solution.GetComponent<RunsProducts.ProductConfigurations>();
-      var psiModules = solution.GetComponent<IPsiModules>();
 
       using (var pool = new MultiCoreFibersPool("Textual search pool", locks, configurations))
-      using (var fibers = pool.Create("Searching for textual occurances"))
+      using (var fibers = pool.Create("Files scan for textual occurances"))
       {
-        foreach (var project in solution.GetAllProjects())
-        foreach (var module in psiModules.GetPsiModules(project))
-        foreach (var psiSourceFile in module.SourceFiles)
+        foreach (var psiSourceFile in GetAllSolutionFiles(solution))
         {
+          // filter out syntetic files out of solution
+          var projectFile = psiSourceFile.ToProjectFile();
+          if (projectFile == null) continue;
+
           var sourceFile = psiSourceFile;
           fibers.EnqueueJob(() =>
           {
@@ -189,7 +189,8 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
               index++)
             {
               var range = TextRange.FromLength(index, filterText.Length);
-              var occurence = new RangeOccurence(sourceFile, new DocumentRange(sourceFile.Document, range));
+              var occurence = new RangeOccurence(
+                sourceFile, new DocumentRange(sourceFile.Document, range));
               lock (occurences)
               {
                 occurences.Add(occurence);
@@ -200,6 +201,30 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
           });
 
           if (checkCancelled()) return;
+        }
+      }
+    }
+
+    [NotNull]
+    private static IEnumerable<IPsiSourceFile> GetAllSolutionFiles([NotNull] ISolution solution)
+    {
+      var psiModules = solution.GetComponent<IPsiModules>();
+
+      foreach (var project in solution.GetAllProjects())
+      {
+        if (project.ProjectProperties.ProjectKind == ProjectKind.MISC_FILES_PROJECT)
+          continue;
+
+        foreach (var module in psiModules.GetPsiModules(project))
+        {
+          foreach (var sourceFile in module.SourceFiles)
+          {
+            // filter out syntetic files out of solution
+            var projectFile = sourceFile.ToProjectFile();
+            if (projectFile == null) continue;
+
+            yield return sourceFile;
+          }
         }
       }
     }
