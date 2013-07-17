@@ -23,17 +23,14 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
     public bool Update(
       IDataContext context, ActionPresentation presentation, DelegateUpdate nextUpdate)
     {
-      return true;
+      var solution = context.GetData(ProjectModel.DataContext.DataConstants.SOLUTION);
+      return (solution != null);
     }
 
     public void Execute(IDataContext context, DelegateExecute nextExecute)
     {
       var solution = context.GetData(ProjectModel.DataContext.DataConstants.SOLUTION);
-      if (solution == null)
-      {
-        MessageBox.ShowError("Cannot execute the Go To action because there's no solution open.");
-        return;
-      }
+      if (solution == null) return;
 
       Lifetimes.Define(
         lifetime: solution.GetLifetime(),

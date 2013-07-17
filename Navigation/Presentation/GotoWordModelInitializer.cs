@@ -11,8 +11,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
     public void InitModel(Lifetime lifetime, GotoByNameModel model)
     {
       model.IsCheckBoxCheckerVisible.FlowInto(
-        lifetime, model.CheckBoxText, value =>
-          value ? "Case sensitive" : "Case insensitive");
+        lifetime, model.CheckBoxText, flag => flag ? "Middle match" : string.Empty);
 
       model.CaptionText.Value = "Enter words:";
       model.NotReadyMessage.Value = "Some textual occurances may be missing at the moment";
