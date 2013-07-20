@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>ReSharper.GoToWord</id>
-    <version>0.8.6-beta</version>
+    <version>0.9</version>
     <title>ReSharper Go to Word plugin</title>
     <authors>Alexander Shvedov</authors>
     <owners>controlflow</owners>
