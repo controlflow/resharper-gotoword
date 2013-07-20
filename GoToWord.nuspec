@@ -2,14 +2,20 @@
 <package>
   <metadata>
     <id>ReSharper.GoToWord</id>
-    <version>0.8.51-beta</version>
+    <version>0.8.6-beta</version>
     <title>ReSharper Go to Word plugin</title>
     <authors>Alexander Shvedov</authors>
     <owners>controlflow</owners>
     <projectUrl>https://github.com/controlflow/resharper-gotoword</projectUrl>
-    <iconUrl>https://raw.github.com/controlflow/resharper-gotoword/master/Content/icon.png</iconUrl>
+    <iconUrl>https://raw.github.com/controlflow/resharper-gotoword/master/content/icon.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Textual navigation plugin for ReSharper</description>
+    <description>
+      Textual navigation/search plugin for ReSharper
+
+      * Search whole solution for any text in any types of project files
+      * Really fast case insensitive search, powered by R# caches
+      * Standard R# "find results" dialog with grouping and previews
+    </description>
     <copyright>Copyright © Alexander Shvedov, 2013</copyright>
     <dependencies>
       <dependency id="ReSharper" version="8.0" />
