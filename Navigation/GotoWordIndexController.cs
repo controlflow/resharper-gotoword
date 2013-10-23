@@ -17,12 +17,10 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
       [NotNull] Lifetime lifetime, [NotNull] ISolution solution,
       LibrariesFlag librariesFlag, [NotNull] IShellLocks locks)
       : base(lifetime, solution, solution, librariesFlag, locks,
-             enableMulticore: false /* do not touch - not supported in R# 8.0 */)
+        enableMulticore: false /* do not touch - not supported in R# 8.0 */)
     {
       var manager = GotoByNameModelManager.GetInstance(solution);
       manager.ProcessModel<GotoWordModelInitializer>(Model, lifetime);
-
-      LibrariesFlagAutoSwitch = false;
     }
 
     protected override ICollection<ChainedNavigationItemData> InitScopes(bool isSearchingInLibs)
