@@ -7,7 +7,6 @@ using JetBrains.Application.Threading;
 using JetBrains.ProjectModel;
 using JetBrains.ReSharper.ControlFlow.GoToWord.Hacks;
 using JetBrains.ReSharper.Feature.Services.Goto;
-using JetBrains.ReSharper.Feature.Services.Search;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.Caches;
 using JetBrains.ReSharper.Psi.Modules;
@@ -15,7 +14,15 @@ using JetBrains.Text;
 using JetBrains.Util;
 using System.Linq;
 using JetBrains.DocumentModel;
+#if RESHARPER8
+using JetBrains.ReSharper.Feature.Services.Search;
 using JetBrains.ReSharper.Feature.Services.Navigation.Occurences;
+#elif RESHARPER81
+using JetBrains.ReSharper.Feature.Services.Navigation.Occurences;
+using JetBrains.ReSharper.Feature.Services.Navigation.Search;
+// NOTE: THANKS UNIVERSE C# CAN DO THAT:
+using CheckForInterrupt = System.Func<bool>;
+#endif
 
 namespace JetBrains.ReSharper.ControlFlow.GoToWord
 {

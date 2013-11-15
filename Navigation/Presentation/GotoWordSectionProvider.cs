@@ -1,8 +1,13 @@
 using System.Collections.Generic;
-using JetBrains.ReSharper.Features.Common.Occurences;
 using JetBrains.ReSharper.Psi;
 using JetBrains.TreeModels;
 using JetBrains.Util;
+#if RESHARPER8
+using JetBrains.ReSharper.Features.Common.Occurences;
+#elif RESHARPER81
+using JetBrains.ReSharper.Feature.Services.Tree.SectionsManagement;
+using JetBrains.ReSharper.Feature.Services.Tree;
+#endif
 
 namespace JetBrains.ReSharper.ControlFlow.GoToWord
 {

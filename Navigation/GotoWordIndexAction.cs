@@ -6,7 +6,6 @@ using JetBrains.Application.DataContext;
 using JetBrains.Application.Progress;
 using JetBrains.DataFlow;
 using JetBrains.ProjectModel;
-using JetBrains.ReSharper.Feature.Services.Search;
 using JetBrains.ReSharper.Features.Common.FindResultsBrowser;
 using JetBrains.UI.Application;
 using JetBrains.UI.Application.Progress;
@@ -14,6 +13,14 @@ using JetBrains.UI.Controls.GotoByName;
 using JetBrains.UI.GotoByName;
 using JetBrains.Util;
 using DataConstants = JetBrains.TextControl.DataContext.DataConstants;
+#if RESHARPER8
+using JetBrains.ReSharper.Feature.Services.Search;
+using JetBrains.ReSharper.Features.Common.Occurences;
+#elif RESHARPER81
+using JetBrains.ReSharper.Feature.Services.Navigation.Search;
+using JetBrains.ReSharper.Feature.Services.Occurences.Presentation;
+using JetBrains.Application.Threading.Tasks;
+#endif
 
 namespace JetBrains.ReSharper.ControlFlow.GoToWord
 {
@@ -44,7 +51,11 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
           var taskExecutor = shell.GetComponent<UITaskExecutor>();
 
           var controller = new GotoWordIndexController(
-            definition.Lifetime, solution, LibrariesFlag.SolutionOnly, shellLocks);
+            definition.Lifetime, solution, LibrariesFlag.SolutionOnly, shellLocks
+#if RESHARPER81
+            , shell.GetComponent<ITaskHost>()
+#endif
+            );
 
           SetShowInFindResultsAction(controller, definition, shellLocks, taskExecutor);
 

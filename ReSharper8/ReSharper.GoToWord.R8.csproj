@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\JetBrains.ReSharper.SDK.8.0.1243\build\JetBrains.ReSharper.SDK.Props" Condition="Exists('..\packages\JetBrains.ReSharper.SDK.8.0.1243\build\JetBrains.ReSharper.SDK.Props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{0D7921A7-092C-4466-B5EA-87342015931A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>JetBrains.ReSharper.ControlFlow.GoToWord</RootNamespace>
+    <AssemblyName>ReSharper.GoToWord</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;JET_MODE_ASSERT; RESHARPER8</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;RESHARPER8</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Hacks\SourceFileToBuildCache.cs">
+      <Link>Hacks\SourceFileToBuildCache.cs</Link>
+    </Compile>
+    <Compile Include="..\Hacks\SourceFileToBuildCacheProperties.cs">
+      <Link>Hacks\SourceFileToBuildCacheProperties.cs</Link>
+    </Compile>
+    <Compile Include="..\Navigation\GotoWordIndexAction.cs">
+      <Link>Navigation\GotoWordIndexAction.cs</Link>
+    </Compile>
+    <Compile Include="..\Navigation\GotoWordIndexController.cs">
+      <Link>Navigation\GotoWordIndexController.cs</Link>
+    </Compile>
+    <Compile Include="..\Navigation\GotoWordIndexProvider.cs">
+      <Link>Navigation\GotoWordIndexProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\Navigation\IGotoWordIndexProvider.cs">
+      <Link>Navigation\IGotoWordIndexProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\Navigation\Presentation\GotoWordBrowserDescriptor.cs">
+      <Link>Navigation\Presenation\GotoWordBrowserDescriptor.cs</Link>
+    </Compile>
+    <Compile Include="..\Navigation\Presentation\GotoWordModelInitializer.cs">
+      <Link>Navigation\Presenation\GotoWordModelInitializer.cs</Link>
+    </Compile>
+    <Compile Include="..\Navigation\Presentation\GotoWordSectionProvider.cs">
+      <Link>Navigation\Presenation\GotoWordSectionProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\Properties\AssemblyInfo.cs">
+      <Link>Properties\AssemblyInfo.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\packages\JetBrains.ReSharper.SDK.8.0.1243\build\JetBrains.ReSharper.SDK.Targets" Condition="Exists('..\packages\JetBrains.ReSharper.SDK.8.0.1243\build\JetBrains.ReSharper.SDK.Targets')" />
+</Project>

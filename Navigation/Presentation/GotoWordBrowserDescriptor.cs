@@ -4,9 +4,14 @@ using JetBrains.Application;
 using JetBrains.Application.Progress;
 using JetBrains.IDE.TreeBrowser;
 using JetBrains.ProjectModel;
+using JetBrains.TreeModels;
+#if RESHARPER8
 using JetBrains.ReSharper.Feature.Services.Search;
 using JetBrains.ReSharper.Features.Common.Occurences;
-using JetBrains.TreeModels;
+#elif RESHARPER81
+using JetBrains.ReSharper.Feature.Services.Tree;
+using JetBrains.ReSharper.Feature.Services.Navigation.Search;
+#endif
 
 namespace JetBrains.ReSharper.ControlFlow.GoToWord
 {
