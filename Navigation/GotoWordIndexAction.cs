@@ -6,7 +6,6 @@ using JetBrains.Application.DataContext;
 using JetBrains.Application.Progress;
 using JetBrains.DataFlow;
 using JetBrains.ProjectModel;
-using JetBrains.ReSharper.Features.Common.FindResultsBrowser;
 using JetBrains.UI.Application;
 using JetBrains.UI.Application.Progress;
 using JetBrains.UI.Controls.GotoByName;
@@ -15,7 +14,7 @@ using JetBrains.Util;
 using DataConstants = JetBrains.TextControl.DataContext.DataConstants;
 #if RESHARPER8
 using JetBrains.ReSharper.Feature.Services.Search;
-using JetBrains.ReSharper.Features.Common.Occurences;
+using JetBrains.ReSharper.Features.Common.FindResultsBrowser;
 #elif RESHARPER81
 using JetBrains.ReSharper.Feature.Services.Navigation.Search;
 using JetBrains.ReSharper.Feature.Services.Occurences.Presentation;
