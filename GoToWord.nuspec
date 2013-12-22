@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>ReSharper.GoToWord</id>
-    <version>0.9.3</version>
+    <version>0.9.5-beta</version>
     <title>ReSharper Go to Word plugin</title>
     <authors>Alexander Shvedov</authors>
     <owners>controlflow</owners>
@@ -15,7 +15,7 @@
       <dependency id="ReSharper" version="8.0" />
     </dependencies>
     <releaseNotes>
-      R# SDK 8.1 EAP support
+      ReSharper v8.1 RTM support.
     </releaseNotes>
     <tags>navigation search words text word index</tags>
   </metadata>
