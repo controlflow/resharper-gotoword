@@ -57,6 +57,7 @@
     <Compile Include="Hacks\SourceFileToBuildCache.cs" />
     <Compile Include="Hacks\SourceFileToBuildCacheProperties.cs" />
     <Compile Include="Navigation\IGotoWordIndexProvider.cs" />
+    <Compile Include="Hacks\TripleGoToEverythingActionHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

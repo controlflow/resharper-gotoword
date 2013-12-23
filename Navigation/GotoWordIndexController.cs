@@ -24,8 +24,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
       LibrariesFlag librariesFlag, [NotNull] IShellLocks locks)
       : base(lifetime, solution, solution, librariesFlag, locks, enableMulticore: false)
 #elif RESHARPER81
-    public GotoWordIndexController(
-      [NotNull] Lifetime lifetime, [NotNull] ISolution solution,
+    public GotoWordIndexController([NotNull] Lifetime lifetime, [NotNull] ISolution solution,
       LibrariesFlag librariesFlag, [NotNull] IShellLocks locks, [NotNull] ITaskHost taskHost)
       : base(lifetime, solution, solution, librariesFlag, locks, taskHost, enableMulticore: false)
 #endif

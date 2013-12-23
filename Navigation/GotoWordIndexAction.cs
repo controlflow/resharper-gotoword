@@ -23,14 +23,17 @@ using JetBrains.Application.Threading.Tasks;
 
 namespace JetBrains.ReSharper.ControlFlow.GoToWord
 {
-  [ActionHandler("GotoWordIndex")]
+  [ActionHandler(Id)]
   public class GotoWordIndexAction : IActionHandler
   {
+    public const string Id = "GotoWordIndex";
+
     public bool Update(
       IDataContext context, ActionPresentation presentation, DelegateUpdate nextUpdate)
     {
       var solution = context.GetData(ProjectModel.DataContext.DataConstants.SOLUTION);
       var isUpdate = (solution != null);
+
       presentation.Visible = isUpdate;
 
       return isUpdate;

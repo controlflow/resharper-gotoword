@@ -132,13 +132,15 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
       return occurences ?? EmptyList<IOccurence>.InstanceList;
     }
 
-    private static bool PrepareWordIndex(
+    private bool PrepareWordIndex(
       [NotNull] ISolution solution, [NotNull] ICache wordIndex,
       [NotNull] CheckForInterrupt checkCancelled)
     {
       var locks = solution.GetComponent<IShellLocks>();
       var configurations = solution.GetComponent<RunsProducts.ProductConfigurations>();
       var persistentIndexManager = solution.GetComponent<IPersistentIndexManager>();
+
+      //using (var fibers = myTasks.CreateBarrier(lifetime, sync: !myEnableMulticore)
 
       using (var pool = new MultiCoreFibersPool("Updating word index cache", locks, configurations))
       using (var fibers = pool.Create("Updating word index cache for 'go to word' navigation"))

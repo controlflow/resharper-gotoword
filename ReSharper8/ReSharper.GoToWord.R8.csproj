@@ -51,6 +51,9 @@
     <Compile Include="..\Hacks\SourceFileToBuildCacheProperties.cs">
       <Link>Hacks\SourceFileToBuildCacheProperties.cs</Link>
     </Compile>
+    <Compile Include="..\Hacks\TripleGoToEverythingActionHandler.cs">
+      <Link>Hacks\TripleGoToEverythingActionHandler.cs</Link>
+    </Compile>
     <Compile Include="..\Navigation\GotoWordIndexAction.cs">
       <Link>Navigation\GotoWordIndexAction.cs</Link>
     </Compile>
