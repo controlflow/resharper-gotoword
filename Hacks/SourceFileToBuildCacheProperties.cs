@@ -5,15 +5,12 @@ using JetBrains.Util;
 
 namespace JetBrains.ReSharper.ControlFlow.GoToWord.Hacks
 {
-  // NOTE: please, do not try this it at home
+  // NOTE: please, do not try this at home
   internal sealed class SourceFileToBuildCacheProperties : IPsiSourceFileProperties
   {
     [NotNull] public static readonly IPsiSourceFileProperties Instance = new SourceFileToBuildCacheProperties();
 
-    public string GetDefaultNamespace()
-    {
-      return string.Empty;
-    }
+    public string GetDefaultNamespace() { return string.Empty; }
 
     public IEnumerable<string> GetPreImportedNamespaces()
     {

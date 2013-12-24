@@ -8,10 +8,11 @@ ReSharper Go to Word plugin
 * Really fast case insensitive search, powered by ReSharper caches
 * Standard ReSharper "find results" dialog with grouping and previews
 ![occurances](/Content/occurances.png)
+* Integrates with ReSharper 8 integrates (triple `Ctrl`+`C` press)
 
 #### Installation
 
-This plugin is available in ReSharper 8 Extension Manager gallery:
+This plugin is available in ReSharper Extension Manager gallery:
 ![occurances](/Content/manager.png)
 
 #### Known issues
@@ -23,6 +24,8 @@ just find *"ReSharper_GotoWordIndex"* action.
 
 ![hotkeys](/Content/hotkeys.png)
 
-* This plugin highly relays on infrastructure changes introduced in ReSharper 8.0
-(universal word index cache for language-independent tokenization), so it will not
-be backported to 7.x or earlier R# versions.
+* Users reporting that shortcuts are unabled 
+
+* This plugin highly relays on infrastructure changes introduced in ReSharper v8.0
+(universal 'word index' cache with language-independent tokenization),
+so it cannot be easily backported to 7.x or earlier R# versions.

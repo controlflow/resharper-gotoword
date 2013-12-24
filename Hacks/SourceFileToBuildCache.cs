@@ -35,70 +35,19 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord.Hacks
       return myOriginal.EnumerateData();
     }
 
-    public bool IsValid()
-    {
-      return myOriginal.IsValid();
-    }
-
-    public string GetPersistentID()
-    {
-      return myOriginal.GetPersistentID();
-    }
-
-    public IPsiModule PsiModule
-    {
-      get { return myOriginal.PsiModule; }
-    }
-
-    public IDocument Document
-    {
-      get { return myOriginal.Document; }
-    }
-
-    public string Name
-    {
-      get { return myOriginal.Name; }
-    }
-
-    public string DisplayName
-    {
-      get { return myOriginal.DisplayName; }
-    }
-
-    public ProjectFileType LanguageType
-    {
-      get { return myOriginal.LanguageType; }
-    }
-
-    public PsiLanguageType PrimaryPsiLanguage
-    {
-      get { return myOriginal.PrimaryPsiLanguage; }
-    }
-
-    public IPsiSourceFileProperties Properties
-    {
-      get { return SourceFileToBuildCacheProperties.Instance; }
-    }
-
-    public IPsiSourceFileStorage PsiStorage
-    {
-      get { return myOriginal.PsiStorage; }
-    }
-
-    public int? InMemoryModificationStamp
-    {
-      get { return myOriginal.InMemoryModificationStamp; }
-    }
-
-    public DateTime LastWriteTimeUtc
-    {
-      get { return myOriginal.LastWriteTimeUtc; }
-    }
-
-    public IModuleReferenceResolveContext ResolveContext
-    {
-      get { return myOriginal.ResolveContext; }
-    }
+    public bool IsValid() { return myOriginal.IsValid(); }
+    public string GetPersistentID() { return myOriginal.GetPersistentID(); }
+    public string Name { get { return myOriginal.Name; } }
+    public string DisplayName { get { return myOriginal.DisplayName; } }
+    public IPsiModule PsiModule { get { return myOriginal.PsiModule; } }
+    public IDocument Document { get { return myOriginal.Document; } }
+    public ProjectFileType LanguageType { get { return myOriginal.LanguageType; } }
+    public PsiLanguageType PrimaryPsiLanguage { get { return myOriginal.PrimaryPsiLanguage; } }
+    public IPsiSourceFileProperties Properties { get { return SourceFileToBuildCacheProperties.Instance; } }
+    public IPsiSourceFileStorage PsiStorage { get { return myOriginal.PsiStorage; } }
+    public int? InMemoryModificationStamp { get { return myOriginal.InMemoryModificationStamp; } }
+    public DateTime LastWriteTimeUtc { get { return myOriginal.LastWriteTimeUtc; } }
+    public IModuleReferenceResolveContext ResolveContext { get { return myOriginal.ResolveContext; } }
 
     // NOTE: IMPORTANT
     public override int GetHashCode()

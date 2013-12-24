@@ -1,9 +1,7 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using JetBrains.Application;
-using JetBrains.Application.Env;
-using JetBrains.Application.Threading;
 using JetBrains.ProjectModel;
 using JetBrains.ReSharper.ControlFlow.GoToWord.Hacks;
 using JetBrains.ReSharper.Feature.Services.Goto;
@@ -12,12 +10,16 @@ using JetBrains.ReSharper.Psi.Caches;
 using JetBrains.ReSharper.Psi.Modules;
 using JetBrains.Text;
 using JetBrains.Util;
-using System.Linq;
 using JetBrains.DocumentModel;
 #if RESHARPER8
+using JetBrains.Application;
+using JetBrains.Application.Env;
+using JetBrains.Application.Threading;
 using JetBrains.ReSharper.Feature.Services.Search;
 using JetBrains.ReSharper.Feature.Services.Navigation.Occurences;
 #elif RESHARPER81
+using JetBrains.DataFlow;
+using JetBrains.Application.Threading.Tasks;
 using JetBrains.ReSharper.Feature.Services.Navigation.Occurences;
 using JetBrains.ReSharper.Feature.Services.Navigation.Search;
 // NOTE: THANKS UNIVERSE C# CAN DO THAT:
@@ -29,83 +31,61 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
   [ShellFeaturePart]
   public sealed class GotoWordIndexProvider : IGotoWordIndexProvider
   {
+#if RESHARPER8
+    [NotNull] private readonly RunsProducts.ProductConfigurations myConfigurations;
+    [NotNull] private readonly IShellLocks myShellLocks;
+    const string GoToWordPoolName = "Go to Word search pool";
+
+    public GotoWordIndexProvider(
+      [NotNull] RunsProducts.ProductConfigurations configurations,
+      [NotNull] IShellLocks shellLocks)
+    {
+      myConfigurations = configurations;
+      myShellLocks = shellLocks;
+    }
+#elif RESHARPER81
+    [NotNull] private readonly Lifetime myLifetime;
+    [NotNull] private readonly ITaskHost myTaskHost;
+
+    public GotoWordIndexProvider([NotNull] Lifetime lifetime, [NotNull] ITaskHost taskHost)
+    {
+      myLifetime = lifetime;
+      myTaskHost = taskHost;
+    }
+#endif
+
     public bool IsApplicable(
-      INavigationScope scope, GotoContext gotoContext, IdentifierMatcher matcher)
+      [NotNull] INavigationScope scope, [NotNull] GotoContext gotoContext, [NotNull] IdentifierMatcher matcher)
     {
       return true;
     }
 
-    public IEnumerable<ChainedNavigationItemData> GetNextChainedScopes(
-      GotoContext gotoContext, IdentifierMatcher matcher,
-      INavigationScope containingScope, CheckForInterrupt checkForInterrupt)
+    [NotNull] public IEnumerable<ChainedNavigationItemData> GetNextChainedScopes(
+      [NotNull] GotoContext gotoContext, [NotNull] IdentifierMatcher matcher,
+      [NotNull] INavigationScope containingScope, [NotNull] CheckForInterrupt checkForInterrupt)
     {
       return EmptyList<ChainedNavigationItemData>.InstanceList;
     }
 
-    [NotNull] private static readonly Key<List<IOccurence>>
-      TextualOccurances = new Key<List<IOccurence>>("TextualOccurances");
-    [NotNull] private static readonly Key<object>
-      FirstTimeLookup = new Key<object>("FirstTimeLookup");
+    [NotNull] private static readonly Key<List<IOccurence>> GoToWordOccurances =
+      new Key<List<IOccurence>>("GoToWordOccurances");
 
-    public IEnumerable<MatchingInfo> FindMatchingInfos(
-      IdentifierMatcher matcher, INavigationScope scope,
-      GotoContext gotoContext, CheckForInterrupt checkCancelled)
+    [NotNull] private static readonly Key<object> GoToWordFirstTimeLookup =
+      new Key<object>("GoToWordFirstTimeLookup");
+
+    [NotNull] public IEnumerable<MatchingInfo> FindMatchingInfos(
+      [NotNull] IdentifierMatcher matcher, [NotNull] INavigationScope scope,
+      [NotNull] GotoContext gotoContext, [NotNull] CheckForInterrupt checkCancelled)
     {
       var solution = scope.GetSolution();
       if (solution == null) return EmptyList<MatchingInfo>.InstanceList;
 
-      // todo: look for ways to disable triming at start
       var filterText = matcher.Filter;
       var occurences = new List<IOccurence>();
 
-      var findByWords = (scope.ExtendedSearchFlag == LibrariesFlag.SolutionOnly);
-      if (findByWords)
+      if (scope.ExtendedSearchFlag == LibrariesFlag.SolutionOnly)
       {
-        var wordIndex = solution.GetPsiServices().WordIndex;
-        var wordCache = (ICache) wordIndex;
-        var words = wordIndex
-          .GetWords(filterText)
-          .OrderByDescending(word => word.Length)
-          .FirstOrDefault();
-
-        if (gotoContext.GetData(FirstTimeLookup) == null)
-        {
-          // force word index to process all not processed files
-          if (PrepareWordIndex(solution, wordCache, checkCancelled))
-            gotoContext.PutData(FirstTimeLookup, FirstTimeLookup);
-        }
-
-        if (words == null) return EmptyList<MatchingInfo>.InstanceList;
-
-        var sourceFiles = new HashSet<IPsiSourceFile>();
-        sourceFiles.AddRange(wordIndex.GetFilesContainingWord(words));
-        sourceFiles.AddRange(wordIndex.GetFilesContainingWord(filterText));
-        sourceFiles.RemoveWhere(sf => sf.ToProjectFile() == null);
-
-        foreach (var sourceFile in sourceFiles)
-        {
-          var text = sourceFile.Document.GetText();
-          if (text == null) continue;
-
-          //if (sourceFile.Properties.IsNonUserFile) continue;
-          // todo: filter d.ts
-
-          for (var index = 0;
-            (index = text.IndexOf(
-              filterText, index, StringComparison.OrdinalIgnoreCase)) != -1;
-            index++)
-          {
-            var range = TextRange.FromLength(index, filterText.Length);
-            var occurence = new RangeOccurence(
-              sourceFile, new DocumentRange(sourceFile.Document, range));
-
-            occurences.Add(occurence);
-
-            if (checkCancelled()) break;
-          }
-
-          if (checkCancelled()) break;
-        }
+        FindByWords(filterText, solution, occurences, gotoContext, checkCancelled);
       }
       else
       {
@@ -114,52 +94,148 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
 
       if (occurences.Count > 0)
       {
-        gotoContext.PutData(TextualOccurances, occurences);
-        return new[] {
-          new MatchingInfo(filterText,
-            EmptyList<IdentifierMatch>.InstanceList)
-        };
+        gotoContext.PutData(GoToWordOccurances, occurences);
+        return new[] { new MatchingInfo(filterText, EmptyList<IdentifierMatch>.InstanceList) };
       }
 
       return EmptyList<MatchingInfo>.InstanceList;
     }
 
-    public IEnumerable<IOccurence> GetOccurencesByMatchingInfo(
-      MatchingInfo navigationInfo, INavigationScope scope,
-      GotoContext gotoContext, CheckForInterrupt checkForInterrupt)
+    private void FindByWords(
+      [NotNull] string textToSearch, [NotNull] ISolution solution, [NotNull] List<IOccurence> occurences,
+      [NotNull] UserDataHolder gotoContext, [NotNull] CheckForInterrupt checkCancelled)
     {
-      var occurences = gotoContext.GetData(TextualOccurances);
+      var wordIndex = solution.GetPsiServices().WordIndex;
+      var longestWord = wordIndex.GetWords(textToSearch)
+        .OrderByDescending(word => word.Length)
+        .FirstOrDefault();
+
+      if (gotoContext.GetData(GoToWordFirstTimeLookup) == null)
+      {
+        // force word index to process all not processed files
+        if (PrepareWordIndex(solution, wordIndex, checkCancelled))
+        {
+          gotoContext.PutData(GoToWordFirstTimeLookup, GoToWordFirstTimeLookup);
+        }
+      }
+
+      if (longestWord == null) return;
+
+      var sourceFiles = new HashSet<IPsiSourceFile>();
+      sourceFiles.AddRange(wordIndex.GetFilesContainingWord(longestWord));
+      sourceFiles.AddRange(wordIndex.GetFilesContainingWord(textToSearch));
+
+      foreach (var sourceFile in sourceFiles)
+      {
+        if (IsFilteredFile(sourceFile)) continue;
+        SearchInFile(textToSearch, sourceFile, occurences, checkCancelled);
+      }
+    }
+
+    private void FindTextual(
+      [NotNull] string searchText, [NotNull] ISolution solution,
+      [NotNull] List<IOccurence> consumer, [NotNull] CheckForInterrupt checkCancelled)
+    {
+#if RESHARPER8
+      using (var pool = new MultiCoreFibersPool(GoToWordPoolName, myShellLocks, myConfigurations))
+      using (var fibers = pool.Create("Files scan for textual occurances"))
+#elif RESHARPER81
+      using (var fibers = myTaskHost.CreateBarrier(
+        myLifetime, checkCancelled, sync: false, takeReadLock: false))
+#endif
+      {
+        foreach (var psiSourceFile in GetAllSolutionFiles(solution))
+        {
+          if (IsFilteredFile(psiSourceFile)) continue;
+
+          var sourceFile = psiSourceFile;
+          fibers.EnqueueJob(() =>
+          {
+            SearchInFile(searchText, sourceFile, consumer, checkCancelled);
+          });
+
+          if (checkCancelled()) return;
+        }
+      }
+    }
+
+    private static bool IsFilteredFile([NotNull] IPsiSourceFile sourceFile)
+    {
+      // filter out files from 'misc files project'
+      var projectFile = sourceFile.ToProjectFile();
+      if (projectFile == null) return true;
+
+      var extension = projectFile.Location.ExtensionNoDot;
+      if (extension.ToLowerInvariant() == "csproj")
+      {
+        GC.KeepAlive(extension);
+      }
+
+      // todo: filter .csproj/.vbproj?
+
+      return false;
+    }
+
+    private static void SearchInFile(
+      [NotNull] string searchText, [NotNull] IPsiSourceFile sourceFile,
+      [NotNull] List<IOccurence> consumer, [NotNull] CheckForInterrupt checkCancelled)
+    {
+      var fileText = sourceFile.Document.GetText();
+      if (fileText == null) return;
+
+      var index = 0;
+      while ((index = fileText.IndexOf(searchText, index, StringComparison.OrdinalIgnoreCase)) >= 0)
+      {
+        var occuranceRange = TextRange.FromLength(index, searchText.Length);
+        var documentRange = new DocumentRange(sourceFile.Document, occuranceRange);
+        var occurence = new RangeOccurence(sourceFile, documentRange);
+
+        lock (consumer)
+        {
+          consumer.Add(occurence);
+        }
+
+        if (checkCancelled()) break;
+        index++;
+      }
+    }
+
+    public IEnumerable<IOccurence> GetOccurencesByMatchingInfo(
+      [NotNull] MatchingInfo navigationInfo, [NotNull] INavigationScope scope,
+      [NotNull] GotoContext gotoContext, [NotNull] CheckForInterrupt checkForInterrupt)
+    {
+      var occurences = gotoContext.GetData(GoToWordOccurances);
       return occurences ?? EmptyList<IOccurence>.InstanceList;
     }
 
     private bool PrepareWordIndex(
-      [NotNull] ISolution solution, [NotNull] ICache wordIndex,
-      [NotNull] CheckForInterrupt checkCancelled)
+      [NotNull] ISolution solution, [NotNull] IWordIndex wordIndex, [NotNull] CheckForInterrupt checkCancelled)
     {
-      var locks = solution.GetComponent<IShellLocks>();
-      var configurations = solution.GetComponent<RunsProducts.ProductConfigurations>();
       var persistentIndexManager = solution.GetComponent<IPersistentIndexManager>();
 
-      //using (var fibers = myTasks.CreateBarrier(lifetime, sync: !myEnableMulticore)
-
-      using (var pool = new MultiCoreFibersPool("Updating word index cache", locks, configurations))
-      using (var fibers = pool.Create("Updating word index cache for 'go to word' navigation"))
+#if RESHARPER8
+      using (var pool = new MultiCoreFibersPool(GoToWordPoolName, myShellLocks, myConfigurations))
+      using (var fibers = pool.Create("Updating word index cache"))
+#elif RESHARPER81
+      using (var fibers = myTaskHost.CreateBarrier(
+        myLifetime, checkCancelled, sync: false, takeReadLock: false))
+#endif
       {
+        var wordCache = (ICache) wordIndex;
         foreach (var psiSourceFile in GetAllSolutionFiles(solution))
         {
           // workaround WordIndex2 implementation, to force indexing
           // unknown project file types like *.txt files and other
-
           var fileToCheck = psiSourceFile.Properties.ShouldBuildPsi
-            ? psiSourceFile
-            : new SourceFileToBuildCache(psiSourceFile);
+            ? psiSourceFile : new SourceFileToBuildCache(psiSourceFile);
 
-          if (!wordIndex.UpToDate(fileToCheck))
+          if (!wordCache.UpToDate(fileToCheck))
           {
             var sourceFile = psiSourceFile;
             fibers.EnqueueJob(() => {
-              var data = wordIndex.Build(sourceFile, false);
-              wordIndex.Merge(sourceFile, data);
+              var data = wordCache.Build(sourceFile, false);
+              wordCache.Merge(sourceFile, data);
+
               persistentIndexManager.OnPersistentCachesUpdated(sourceFile);
             });
           }
@@ -171,49 +247,6 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
       return true;
     }
 
-    private static void FindTextual([NotNull] string filterText,
-      [NotNull] ISolution solution, [NotNull] List<IOccurence> occurences,
-      [NotNull] CheckForInterrupt checkCancelled)
-    {
-      var locks = solution.GetComponent<IShellLocks>();
-      var configurations = solution.GetComponent<RunsProducts.ProductConfigurations>();
-
-      using (var pool = new MultiCoreFibersPool("Textual search pool", locks, configurations))
-      using (var fibers = pool.Create("Files scan for textual occurances"))
-      {
-        foreach (var psiSourceFile in GetAllSolutionFiles(solution))
-        {
-          // filter out syntetic files out of solution
-          var projectFile = psiSourceFile.ToProjectFile();
-          if (projectFile == null) continue;
-
-          var sourceFile = psiSourceFile;
-          fibers.EnqueueJob(() =>
-          {
-            var text = sourceFile.Document.GetText();
-            if (text == null) return;
-
-            for (var index = 0;
-              (index = text.IndexOf(filterText, index, StringComparison.OrdinalIgnoreCase)) != -1;
-              index++)
-            {
-              var range = TextRange.FromLength(index, filterText.Length);
-              var occurence = new RangeOccurence(
-                sourceFile, new DocumentRange(sourceFile.Document, range));
-              lock (occurences)
-              {
-                occurences.Add(occurence);
-              }
-
-              if (checkCancelled()) break;
-            }
-          });
-
-          if (checkCancelled()) return;
-        }
-      }
-    }
-
     [NotNull]
     private static IEnumerable<IPsiSourceFile> GetAllSolutionFiles([NotNull] ISolution solution)
     {
@@ -221,19 +254,17 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
 
       foreach (var project in solution.GetAllProjects())
       {
-        if (project.ProjectProperties.ProjectKind == ProjectKind.MISC_FILES_PROJECT)
-          continue;
+        var projectKind = project.ProjectProperties.ProjectKind;
+        if (projectKind == ProjectKind.MISC_FILES_PROJECT) continue;
 
         foreach (var module in psiModules.GetPsiModules(project))
+        foreach (var sourceFile in module.SourceFiles)
         {
-          foreach (var sourceFile in module.SourceFiles)
-          {
-            // filter out syntetic files out of solution
-            var projectFile = sourceFile.ToProjectFile();
-            if (projectFile == null) continue;
+          // filter out syntetic files out of solution
+          var projectFile = sourceFile.ToProjectFile();
+          if (projectFile == null) continue;
 
-            yield return sourceFile;
-          }
+          yield return sourceFile;
         }
       }
     }
