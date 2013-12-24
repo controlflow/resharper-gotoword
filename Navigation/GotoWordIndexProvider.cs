@@ -8,6 +8,7 @@ using JetBrains.ReSharper.Feature.Services.Goto;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.Caches;
 using JetBrains.ReSharper.Psi.Modules;
+using JetBrains.ReSharper.Psi.Web.Util;
 using JetBrains.Text;
 using JetBrains.Util;
 using JetBrains.DocumentModel;
@@ -165,13 +166,15 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
       var projectFile = sourceFile.ToProjectFile();
       if (projectFile == null) return true;
 
-      var extension = projectFile.Location.ExtensionNoDot;
-      if (extension.ToLowerInvariant() == "csproj")
+      var project = projectFile.ParentFolder as IProject;
+      if (project != null)
       {
-        GC.KeepAlive(extension);
+        // do not include .csproj in search (unable to open in VS without unloading)
+        if (projectFile.LanguageType.Is<MSBuildProjectFileType>())
+        {
+          if (project.IsOpened) return true;
+        }
       }
-
-      // todo: filter .csproj/.vbproj?
 
       return false;
     }
