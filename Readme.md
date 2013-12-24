@@ -9,6 +9,10 @@ ReSharper Go to Word plugin
 ![occurances](/Content/occurances.png)
 * Really fast case insensitive search, powered by ReSharper built-in caches
 
+#### In action
+
+![demo](/Content/gotoword.gif)
+
 #### Installation
 
 This plugin is available for download in ReSharper
