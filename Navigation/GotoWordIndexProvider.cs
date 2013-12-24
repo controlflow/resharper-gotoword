@@ -8,7 +8,6 @@ using JetBrains.ReSharper.Feature.Services.Goto;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.Caches;
 using JetBrains.ReSharper.Psi.Modules;
-using JetBrains.ReSharper.Psi.Web.Util;
 using JetBrains.Text;
 using JetBrains.Util;
 using JetBrains.DocumentModel;
