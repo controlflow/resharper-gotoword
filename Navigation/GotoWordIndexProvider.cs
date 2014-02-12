@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using JetBrains.Application;
 using JetBrains.ProjectModel;
 using JetBrains.ReSharper.ControlFlow.GoToWord.Hacks;
 using JetBrains.ReSharper.Feature.Services.Goto;
@@ -31,14 +32,14 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
   [ShellFeaturePart]
   public sealed class GotoWordIndexProvider : IGotoWordIndexProvider
   {
+    [NotNull] private readonly IShellLocks myShellLocks;
+
 #if RESHARPER8
     [NotNull] private readonly RunsProducts.ProductConfigurations myConfigurations;
-    [NotNull] private readonly IShellLocks myShellLocks;
     const string GoToWordPoolName = "Go to Word search pool";
 
     public GotoWordIndexProvider(
-      [NotNull] RunsProducts.ProductConfigurations configurations,
-      [NotNull] IShellLocks shellLocks)
+      [NotNull] RunsProducts.ProductConfigurations configurations, [NotNull] IShellLocks shellLocks)
     {
       myConfigurations = configurations;
       myShellLocks = shellLocks;
@@ -47,10 +48,12 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
     [NotNull] private readonly Lifetime myLifetime;
     [NotNull] private readonly ITaskHost myTaskHost;
 
-    public GotoWordIndexProvider([NotNull] Lifetime lifetime, [NotNull] ITaskHost taskHost)
+    public GotoWordIndexProvider(
+      [NotNull] Lifetime lifetime, [NotNull] ITaskHost taskHost, [NotNull] IShellLocks shellLocks)
     {
       myLifetime = lifetime;
       myTaskHost = taskHost;
+      myShellLocks = shellLocks;
     }
 #endif
 
@@ -83,6 +86,8 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
       var filterText = matcher.Filter;
       var occurrences = new List<IOccurence>();
 
+      myShellLocks.AssertReadAccessAllowed();
+
       if (scope.ExtendedSearchFlag == LibrariesFlag.SolutionOnly)
       {
         FindByWords(filterText, solution, occurrences, gotoContext, checkCanceled);
@@ -95,7 +100,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
       if (occurrences.Count > 0)
       {
         gotoContext.PutData(GoToWordOccurrences, occurrences);
-        return new[] { new MatchingInfo(filterText, EmptyList<IdentifierMatch>.InstanceList) };
+        return new[] {new MatchingInfo(filterText, EmptyList<IdentifierMatch>.InstanceList)};
       }
 
       return EmptyList<MatchingInfo>.InstanceList;
@@ -107,8 +112,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
     {
       var wordIndex = solution.GetPsiServices().WordIndex;
       var longestWord = wordIndex.GetWords(textToSearch)
-        .OrderByDescending(word => word.Length)
-        .FirstOrDefault();
+        .OrderByDescending(word => word.Length).FirstOrDefault();
 
       if (gotoContext.GetData(GoToWordFirstTimeLookup) == null)
       {
@@ -151,8 +155,10 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
           var sourceFile = psiSourceFile;
           fibers.EnqueueJob(() =>
           {
-            // ReSharper disable once ConvertToLambdaExpression
-            SearchInFile(searchText, sourceFile, consumer, checkCanceled);
+            using (ReadLockCookie.Create())
+            {
+              SearchInFile(searchText, sourceFile, consumer, checkCanceled);
+            }
           });
 
           if (checkCanceled()) return;
@@ -235,11 +241,15 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
           if (!wordCache.UpToDate(fileToCheck))
           {
             var sourceFile = psiSourceFile;
-            fibers.EnqueueJob(() => {
-              var data = wordCache.Build(sourceFile, false);
-              wordCache.Merge(sourceFile, data);
+            fibers.EnqueueJob(() =>
+            {
+              using (ReadLockCookie.Create())
+              {
+                var data = wordCache.Build(sourceFile, false);
+                wordCache.Merge(sourceFile, data);
 
-              persistentIndexManager.OnPersistentCachesUpdated(sourceFile);
+                persistentIndexManager.OnPersistentCachesUpdated(sourceFile);
+              }
             });
           }
 

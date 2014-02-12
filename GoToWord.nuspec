@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>ReSharper.GoToWord</id>
-    <version>0.9.6</version>
+    <version>0.9.7</version>
     <title>ReSharper Go to Word plugin</title>
     <authors>Alexander Shvedov</authors>
     <owners>controlflow</owners>
@@ -17,7 +17,7 @@
       <dependency id="ReSharper" version="8.0" />
     </dependencies>
     <releaseNotes>
-      Integration with "Go to Everything" - triple [Ctrl]+[T] now opens "Go to Word" search. ReSharper v8.1 support.
+      Integration with "Go to Everything" - triple [Ctrl]+[T] now opens "Go to Word" search. ReSharper 8.1.1 support
     </releaseNotes>
     <tags>navigation search word words text index cache</tags>
   </metadata>
