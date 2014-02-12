@@ -14,7 +14,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
         lifetime, model.CheckBoxText, flag => flag ? "Middle match" : string.Empty);
 
       model.CaptionText.Value = "Enter words:";
-      model.NotReadyMessage.Value = "Some textual occurances may be missing at the moment";
+      model.NotReadyMessage.Value = "Some textual occurrences may be missing at the moment";
     }
   }
 }

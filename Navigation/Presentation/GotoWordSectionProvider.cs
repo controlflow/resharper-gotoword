@@ -28,8 +28,8 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
       var sections = new List<TreeSection>();
       foreach (var section in descriptor.OccurenceSections)
       {
-        var occurances = (section.Items.Count > 1) ? "textual occurances" : "textual occurance";
-        var title = string.Format("Found {0} {1}", section.Items.Count, occurances);
+        var occurrences = (section.Items.Count > 1) ? "textual occurrences" : "textual occurrence";
+        var title = string.Format("Found {0} {1}", section.Items.Count, occurrences);
         sections.Add(new TreeSection(section.Model, title));
       }
 

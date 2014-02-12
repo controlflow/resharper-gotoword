@@ -21,7 +21,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
 
     public GotoWordBrowserDescriptor(
       [NotNull] ISolution solution, [NotNull] string pattern,
-      [NotNull] List<IOccurence> occurences,
+      [NotNull] List<IOccurence> occurrences,
       [CanBeNull] IProgressIndicator indicator = null)
       : base(solution)
     {
@@ -32,7 +32,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
       using (ReadLockCookie.Create())
       {
         // ReSharper disable once DoNotCallOverridableMethodsInConstructor
-        SetResults(occurences, indicator);
+        SetResults(occurrences, indicator);
       }
     }
 
