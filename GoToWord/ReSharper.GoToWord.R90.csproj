@@ -51,6 +51,9 @@
     <Reference Include="JetBrains.Platform.ReSharper.Shell">
       <HintPath>..\..\ReSharper\bin\JetBrains.Platform.ReSharper.Shell.dll</HintPath>
     </Reference>
+    <Reference Include="JetBrains.Platform.ReSharper.TextControl">
+      <HintPath>..\..\ReSharper\bin\JetBrains.Platform.ReSharper.TextControl.dll</HintPath>
+    </Reference>
     <Reference Include="JetBrains.Platform.ReSharper.UI">
       <HintPath>..\..\ReSharper\bin\JetBrains.Platform.ReSharper.UI.dll</HintPath>
     </Reference>

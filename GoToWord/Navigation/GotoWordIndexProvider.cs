@@ -5,25 +5,36 @@ using JetBrains.Annotations;
 using JetBrains.Application;
 using JetBrains.ProjectModel;
 using JetBrains.ReSharper.ControlFlow.GoToWord.Hacks;
-using JetBrains.ReSharper.Feature.Services.Goto;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.Caches;
 using JetBrains.ReSharper.Psi.Modules;
 using JetBrains.Text;
 using JetBrains.Util;
 using JetBrains.DocumentModel;
+
 #if RESHARPER8
 using JetBrains.Application;
 using JetBrains.Application.Env;
 using JetBrains.Application.Threading;
 using JetBrains.ReSharper.Feature.Services.Search;
 using JetBrains.ReSharper.Feature.Services.Navigation.Occurences;
+using JetBrains.ReSharper.Feature.Services.Goto;
 #elif RESHARPER81
 using JetBrains.DataFlow;
 using JetBrains.Application.Threading.Tasks;
+using JetBrains.ReSharper.Feature.Services.Goto;
 using JetBrains.ReSharper.Feature.Services.Navigation.Occurences;
 using JetBrains.ReSharper.Feature.Services.Navigation.Search;
 // NOTE: THANKS UNIVERSE C# CAN DO THAT:
+using CheckForInterrupt = System.Func<bool>;
+#elif RESHARPER9
+using JetBrains.DataFlow;
+using JetBrains.Application.ComponentModel;
+using JetBrains.Application.Threading.Tasks;
+using JetBrains.ReSharper.Feature.Services.Navigation;
+using JetBrains.ReSharper.Feature.Services.Navigation.Goto.Misc;
+using JetBrains.ReSharper.Feature.Services.Navigation.Goto.ProvidersAPI;
+using JetBrains.ReSharper.Feature.Services.Occurences;
 using CheckForInterrupt = System.Func<bool>;
 #endif
 
@@ -44,7 +55,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
       myConfigurations = configurations;
       myShellLocks = shellLocks;
     }
-#elif RESHARPER81
+#elif RESHARPER81 || RESHARPER9
     [NotNull] private readonly Lifetime myLifetime;
     [NotNull] private readonly ITaskHost myTaskHost;
 
@@ -143,7 +154,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
 #if RESHARPER8
       using (var pool = new MultiCoreFibersPool(GoToWordPoolName, myShellLocks, myConfigurations))
       using (var fibers = pool.Create("Files scan for textual occurances"))
-#elif RESHARPER81
+#elif RESHARPER81 || RESHARPER9
       using (var fibers = myTaskHost.CreateBarrier(
         myLifetime, checkCanceled, sync: false, takeReadLock: false))
 #endif
@@ -225,7 +236,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
 #if RESHARPER8
       using (var pool = new MultiCoreFibersPool(GoToWordPoolName, myShellLocks, myConfigurations))
       using (var fibers = pool.Create("Updating word index cache"))
-#elif RESHARPER81
+#elif RESHARPER81 || RESHARPER9
       using (var fibers = myTaskHost.CreateBarrier(
         myLifetime, checkCanceled, sync: false, takeReadLock: false))
 #endif

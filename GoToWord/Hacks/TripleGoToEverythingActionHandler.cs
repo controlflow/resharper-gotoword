@@ -27,7 +27,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord.Hacks
 
       const string gotoTypeActionId = "GotoType";
 
-#if RESHARPER8 | RESHARPER81
+#if RESHARPER8 || RESHARPER81
       var gotoTypeAction = actionManager.TryGetAction(gotoTypeActionId) as IUpdatableAction;
       if (gotoTypeAction != null)
       {
@@ -53,7 +53,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord.Hacks
       var controller = context.GetData(GotoTypeAction.GotoController);
       if (controller is GotoDeclaredElementController)
       {
-#if RESHARPER8 | RESHARPER81
+#if RESHARPER8 || RESHARPER81
         var gotoWordAction = myActionManager.TryGetAction(GotoWordIndexAction.Id) as IExecutableAction;
         if (gotoWordAction != null)
         {

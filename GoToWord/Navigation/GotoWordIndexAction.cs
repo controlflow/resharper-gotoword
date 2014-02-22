@@ -12,6 +12,7 @@ using JetBrains.UI.Controls.GotoByName;
 using JetBrains.UI.GotoByName;
 using JetBrains.Util;
 using DataConstants = JetBrains.TextControl.DataContext.DataConstants;
+
 #if RESHARPER8
 using JetBrains.ReSharper.Feature.Services.Search;
 using JetBrains.ReSharper.Features.Common.FindResultsBrowser;
@@ -19,14 +20,35 @@ using JetBrains.ReSharper.Features.Common.FindResultsBrowser;
 using JetBrains.ReSharper.Feature.Services.Navigation.Search;
 using JetBrains.ReSharper.Feature.Services.Occurences.Presentation;
 using JetBrains.Application.Threading.Tasks;
+#elif RESHARPER9
+using IActionHandler = JetBrains.UI.ActionsRevised.IAction;
+using JetBrains.ReSharper.Feature.Services.Navigation.Goto.ProvidersAPI;
+using JetBrains.ReSharper.Feature.Services.Navigation;
+using JetBrains.ReSharper.Feature.Services.Presentation;
+using JetBrains.Application.Threading.Tasks;
+using JetBrains.UI.ActionsRevised;
 #endif
 
 namespace JetBrains.ReSharper.ControlFlow.GoToWord
 {
+#if RESHARPER8 || RESHARPER81
+
   [ActionHandler(Id)]
   public class GotoWordIndexAction : IActionHandler
   {
     public const string Id = "GotoWordIndex";
+
+#elif RESHARPER9
+  [Action(Id)]
+  public class GotoWordIndexAction : IAction
+  {
+    public const string Id = "GotoWordIndex";
+  }
+
+  [ActionHandler(typeof(GotoWordIndexAction))]
+  public class GotoWordIndexActionHandler : IActionHandler
+  {
+#endif
 
     public bool Update(
       IDataContext context, ActionPresentation presentation, DelegateUpdate nextUpdate)
@@ -54,7 +76,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
 
           var controller = new GotoWordIndexController(
             definition.Lifetime, solution, LibrariesFlag.SolutionOnly, shellLocks
-#if RESHARPER81
+#if RESHARPER81 || RESHARPER9
             , shell.GetComponent<ITaskHost>()
 #endif
             );
