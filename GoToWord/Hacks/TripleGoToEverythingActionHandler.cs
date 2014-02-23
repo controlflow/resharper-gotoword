@@ -66,7 +66,9 @@ namespace JetBrains.ReSharper.GoToWord.Hacks
         var gotoWordAction = myActionManager.Defs.TryGetActionDefById(GotoWordIndexAction.Id);
         if (gotoWordAction != null)
         {
-          myActionManager.Handlers.Evaluate(gotoWordAction, context);
+          var evaluatedAction = myActionManager.Handlers.Evaluate(gotoWordAction, context);
+          if (evaluatedAction.IsAvailable) evaluatedAction.Execute();
+          return;
         }
 #endif
 

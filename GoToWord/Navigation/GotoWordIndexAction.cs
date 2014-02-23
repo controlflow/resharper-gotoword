@@ -39,14 +39,9 @@ namespace JetBrains.ReSharper.GoToWord
 
 #elif RESHARPER9
   [Action(Id)]
-  public class GotoWordIndexAction : IAction
+  public class GotoWordIndexAction : IExecutableAction
   {
     public const string Id = "GotoWordIndex";
-  }
-
-  [ActionHandler(typeof(GotoWordIndexAction))]
-  public class GotoWordIndexActionHandler : IAction
-  {
 #endif
 
     public bool Update(
