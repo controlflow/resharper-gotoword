@@ -61,7 +61,7 @@ namespace JetBrains.ReSharper.GoToWord
       var factory = Shell.Instance.GetComponent<GotoWordControllerFactory>();
       var projectElement = (IProjectModelElement) projectFile ?? solution;
 
-      factory.ShowMenu(projectElement, initialText, textControl);
+      factory.ShowMenu(projectElement, textControl, initialText);
     }
 
     // todo: rewrite

@@ -8,6 +8,7 @@ using JetBrains.DocumentModel;
 using JetBrains.ProjectModel;
 using JetBrains.ReSharper.Daemon;
 using JetBrains.ReSharper.Feature.Services.LiveTemplates.Hotspots;
+using JetBrains.ReSharper.Feature.Services.Navigation.CustomHighlighting;
 using JetBrains.ReSharper.Feature.Services.Navigation.Occurences;
 using JetBrains.ReSharper.Feature.Services.Navigation.Search;
 using JetBrains.ReSharper.Psi;
@@ -23,6 +24,7 @@ using JetBrains.UI.PopupMenu;
 using JetBrains.UI.PopupMenu.Impl;
 using JetBrains.UI.RichText;
 using JetBrains.Util;
+using JetBrains.Util.dataStructures.TypedIntrinsics;
 
 namespace JetBrains.ReSharper.GoToWord
 {
@@ -38,7 +40,9 @@ namespace JetBrains.ReSharper.GoToWord
     [NotNull] private readonly IProjectModelElement myProjectElement;
     [CanBeNull] private readonly IPsiSourceFile myCurrentFile;
     [CanBeNull] private readonly ITextControl myTextControl;
+
     private volatile bool myShouldDropHighlightings;
+    private List<LocalOccurrence> myLocal;
 
     public GotoWordController(
       [NotNull] Lifetime lifetime, [NotNull] IShellLocks locks,
@@ -67,10 +71,21 @@ namespace JetBrains.ReSharper.GoToWord
           {
             if (textControl != null)
             {
-              var textControlPosRange = textControl.Scrolling.ViewportRange.Value;
-              GC.KeepAlive(textControlPosRange);
+              //var textControlPosRange = textControl.Scrolling.ViewportRange.Value;
+              //GC.KeepAlive(textControlPosRange);
 
+              myLocks.QueueReadLock("Aa", () =>
+              {
+                // todo: merge with highlighting updater?
+                var target = textControl.Coords.FromDocLineColumn(
+                  new DocumentCoords((Int32<DocLine>)(Math.Max(localOccurrence.LineNumber - 2, 0)), (Int32<DocColumn>)0));
+                textControl.Scrolling.ScrollTo(target, TextControlScrollType.TopOfView);
+              });
 
+              if (myLocal != null)
+              {
+                UpdateLocalHighlightings(textControl.Document, myLocal);
+              }
             }
           }
         }
@@ -124,8 +139,10 @@ namespace JetBrains.ReSharper.GoToWord
 
           if (myTextControl != null)
           {
-            UpdateLocalOccurancesHighlight(myTextControl.Document, occurences);
+            UpdateLocalHighlightings(myTextControl.Document, occurences);
           }
+
+          myLocal = occurences;
         }
         else
         {
@@ -147,52 +164,57 @@ namespace JetBrains.ReSharper.GoToWord
       return false;
     }
 
-    private static readonly Key Foo = new Key("aaa");
+    [NotNull] private static readonly Key GotoWordHighlightings = new Key("GotoWordHighlightings");
 
-    private void UpdateLocalOccurancesHighlight(
+    private void UpdateLocalHighlightings(
       [NotNull] IDocument document, [NotNull] IList<LocalOccurrence> occurences)
     {
-      
-
-      Shell.Instance.Locks.QueueReadLock("aa", () =>
+      myLocks.QueueReadLock("GoToWord.UpdateLocalHighlightings", () =>
       {
         var markupManager = Shell.Instance.GetComponent<IDocumentMarkupManager>();
         var markup = markupManager.GetMarkupModel(document);
 
-        var hs = new List<IHighlighter>(markup.GetHighlightersEnumerable(Foo));
-        foreach (var highlighter in hs)
-        {
-          markup.RemoveHighlighter(highlighter);
-        }
+        var selected = SelectedItem.Value as LocalOccurrence;
 
-        if (occurences.Count == 0)
-        {
-          myShouldDropHighlightings = false;
-        }
-        else foreach (var occurrence in occurences)
+        var hs = new LocalList<IHighlighter>();
+        hs.AddRange(markup.GetHighlightersEnumerable(GotoWordHighlightings));
+        foreach (var highlighter in hs) markup.RemoveHighlighter(highlighter);
+
+        if (occurences.Count == 0) { myShouldDropHighlightings = false; return; }
+
+        var errorStripeAttributes = new ErrorStripeAttributes(
+          ErrorStripeKind.ERROR, "ReSharper Write Usage Marker on Error Stripe");
+
+        foreach (var occurrence in occurences)
         {
           markup.AddHighlighter(
-            Foo, occurrence.Range.TextRange, AreaType.EXACT_RANGE, 0,
-            HotspotSessionUi.CURRENT_HOTSPOT_HIGHLIGHTER,
-            new ErrorStripeAttributes(ErrorStripeKind.WARNING, "ReSharper Todo Item Marker on Error Stripe"),
-            null);
+            GotoWordHighlightings, occurrence.Range.TextRange, AreaType.EXACT_RANGE, 0,
+            HotspotSessionUi.CURRENT_HOTSPOT_MIRRORS_HIGHLIGHTER, errorStripeAttributes, null);
+
+          if (occurrence == selected)
+          {
+            markup.AddHighlighter(
+              GotoWordHighlightings, occurrence.Range.TextRange, AreaType.EXACT_RANGE, 0,
+              CustomHighlightingManagerIds.NavigationHighlighterID, ErrorStripeAttributes.Empty, null);
+          }
 
           myShouldDropHighlightings = true;
         }
       });
-
-      
     }
 
     private void DropHighlightings()
     {
+      // todo: bring back original viewport
+
       var textControl = myTextControl;
       if (textControl != null && myShouldDropHighlightings)
       {
-        UpdateLocalOccurancesHighlight(textControl.Document, EmptyList<LocalOccurrence>.InstanceList);
+        UpdateLocalHighlightings(textControl.Document, EmptyList<LocalOccurrence>.InstanceList);
       }
     }
 
+    // todo: make lazy
     private static void SearchInCurrentFile(
       [NotNull] string searchText,
       [NotNull] IPsiSourceFile sourceFile,

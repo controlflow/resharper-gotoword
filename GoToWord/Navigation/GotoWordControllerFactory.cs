@@ -18,18 +18,18 @@ namespace JetBrains.ReSharper.GoToWord
     [NotNull] private readonly UIApplication myUiApplication;
     [NotNull] private readonly GotoByNameMenuComponent myMenuComponent;
 
-    public GotoWordControllerFactory([NotNull] IShellLocks shellLocks,
-                                     [NotNull] UIApplication uiApplication,
-                                     [NotNull] GotoByNameMenuComponent menuComponent)
+    public GotoWordControllerFactory(
+      [NotNull] IShellLocks shellLocks, [NotNull] UIApplication uiApplication,
+      [NotNull] GotoByNameMenuComponent menuComponent)
     {
       myShellLocks = shellLocks;
       myUiApplication = uiApplication;
       myMenuComponent = menuComponent;
     }
 
-    public void ShowMenu([NotNull] IProjectModelElement projectElement,
-                         [CanBeNull] GotoByNameDataConstants.SearchTextData initialText,
-                         [CanBeNull] ITextControl textControl)
+    public void ShowMenu(
+      [NotNull] IProjectModelElement projectElement, [CanBeNull] ITextControl textControl,
+      [CanBeNull] GotoByNameDataConstants.SearchTextData initialText)
     {
       var solution = projectElement.GetSolution();
       var definition = Lifetimes.Define(solution.GetLifetime());
@@ -59,7 +59,9 @@ namespace JetBrains.ReSharper.GoToWord
         myUiApplication.MainWindow, initialText);
 
       var menuDoc = menu.MenuView.Value.Document.NotNull("menuDoc != null");
-      menuDoc.SelectedItem.FlowInto(definition.Lifetime, controller.SelectedItem, x => x.Key);
+      menuDoc.SelectedItem.FlowInto(
+        definition.Lifetime, controller.SelectedItem,
+        FConverter: item => (item != null) ? item.Key : null);
     }
   }
 }
