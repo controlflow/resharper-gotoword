@@ -6,12 +6,19 @@ using JetBrains.Application;
 using JetBrains.DataFlow;
 using JetBrains.DocumentModel;
 using JetBrains.ProjectModel;
+using JetBrains.ReSharper.Daemon;
+using JetBrains.ReSharper.Feature.Services.LiveTemplates.Hotspots;
 using JetBrains.ReSharper.Feature.Services.Navigation.Occurences;
 using JetBrains.ReSharper.Feature.Services.Navigation.Search;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.Resources;
 using JetBrains.ReSharper.Psi.Services.Presentation;
+using JetBrains.TextControl;
+using JetBrains.TextControl.DocumentMarkup;
+using JetBrains.TextControl.Graphics;
+using JetBrains.Threading;
 using JetBrains.UI.GotoByName;
+using JetBrains.UI.Icons;
 using JetBrains.UI.PopupMenu;
 using JetBrains.UI.PopupMenu.Impl;
 using JetBrains.UI.RichText;
@@ -25,24 +32,63 @@ namespace JetBrains.ReSharper.GoToWord
   // todo: newlines in filter text
   // todo: support escaping in search text?
 
-  public class GotoWordController : GotoByNameController
+  public sealed class GotoWordController : GotoByNameController
   {
-    private readonly IProjectFile myProjectFile;
+    [NotNull] private readonly IShellLocks myLocks;
+    [NotNull] private readonly IProjectModelElement myProjectElement;
+    [CanBeNull] private readonly IPsiSourceFile myCurrentFile;
+    [CanBeNull] private readonly ITextControl myTextControl;
+    private volatile bool myShouldDropHighlightings;
 
-    public GotoWordController([NotNull] Lifetime lifetime, [NotNull] IShellLocks locks,
-      [CanBeNull] IProjectFile projectFile)
+    public GotoWordController(
+      [NotNull] Lifetime lifetime, [NotNull] IShellLocks locks,
+      [NotNull] IProjectModelElement projectElement, [CanBeNull] ITextControl textControl)
       : base(lifetime, new GotoByNameModel(lifetime), locks)
     {
-      myProjectFile = projectFile;
-      // init model
-      var model = Model;
+      myLocks = locks;
+      myTextControl = textControl;
+      myProjectElement = projectElement;
 
+      var projectFile = projectElement as IProjectFile;
+      if (projectFile != null)
+      {
+        myCurrentFile = projectFile.ToSourceFile();
+      }
+
+      lifetime.AddAction(DropHighlightings);
+
+      SelectedItem = new Property<object>(lifetime, "SelectedItem");
+      SelectedItem.Change.Advise(lifetime, x =>
+      {
+        if (x.HasNew)
+        {
+          var localOccurrence = x.New as LocalOccurrence;
+          if (localOccurrence != null)
+          {
+            if (textControl != null)
+            {
+              var textControlPosRange = textControl.Scrolling.ViewportRange.Value;
+              GC.KeepAlive(textControlPosRange);
+
+
+            }
+          }
+        }
+      });
+
+      InitializeModel(lifetime, Model);
+    }
+
+    private static void InitializeModel([NotNull] Lifetime lifetime, [NotNull] GotoByNameModel model)
+    {
       model.IsCheckBoxCheckerVisible.FlowInto(
         lifetime, model.CheckBoxText, flag => flag ? "Middle match" : string.Empty);
 
       model.CaptionText.Value = "Enter words:";
       model.NotReadyMessage.Value = "Some textual occurrences may be missing at the moment";
     }
+
+    public IProperty<object> SelectedItem { get; private set; }
 
     protected override bool ExecuteItem(JetPopupMenuItem item, ISignal<bool> closeBeforeExecute)
     {
@@ -54,22 +100,36 @@ namespace JetBrains.ReSharper.GoToWord
     protected override bool UpdateItems(
       string filterString, Func<IEnumerable<JetPopupMenuItem>, AddItemsBehavior, bool> itemsConsumer)
     {
-      if (myProjectFile != null)
+      var currentFile = myCurrentFile;
+      if (currentFile != null)
       {
-        var sourceFile = myProjectFile.ToSourceFile();
-        if (sourceFile != null && filterString.Length > 0)
+        if (filterString.Length > 0)
         {
           var occurences = new List<LocalOccurrence>();
-          SearchInCurrentFile(filterString, sourceFile, occurences);
+          SearchInCurrentFile(filterString, currentFile, occurences);
           var xs = new List<JetPopupMenuItem>();
+
+          var presentationService = Shell.Instance.GetComponent<PsiSourceFilePresentationService>();
+          var sourceFileIcon = presentationService.GetIconId(currentFile);
+          var displayName = currentFile.Name;
 
           foreach (var occurence in occurences)
           {
-            var item = new JetPopupMenuItem(occurence, new Foo1(occurence));
+            var descriptor = new Foo1(occurence, displayName, sourceFileIcon);
+            var item = new JetPopupMenuItem(occurence, descriptor);
             xs.Add(item);
           }
 
           itemsConsumer(xs, AddItemsBehavior.Replace);
+
+          if (myTextControl != null)
+          {
+            UpdateLocalOccurancesHighlight(myTextControl.Document, occurences);
+          }
+        }
+        else
+        {
+          DropHighlightings();
         }
       }
 
@@ -85,6 +145,52 @@ namespace JetBrains.ReSharper.GoToWord
       //itemsConsumer(null, AddItemsBehavior.Append);
 
       return false;
+    }
+
+    private static readonly Key Foo = new Key("aaa");
+
+    private void UpdateLocalOccurancesHighlight(
+      [NotNull] IDocument document, [NotNull] IList<LocalOccurrence> occurences)
+    {
+      
+
+      Shell.Instance.Locks.QueueReadLock("aa", () =>
+      {
+        var markupManager = Shell.Instance.GetComponent<IDocumentMarkupManager>();
+        var markup = markupManager.GetMarkupModel(document);
+
+        var hs = new List<IHighlighter>(markup.GetHighlightersEnumerable(Foo));
+        foreach (var highlighter in hs)
+        {
+          markup.RemoveHighlighter(highlighter);
+        }
+
+        if (occurences.Count == 0)
+        {
+          myShouldDropHighlightings = false;
+        }
+        else foreach (var occurrence in occurences)
+        {
+          markup.AddHighlighter(
+            Foo, occurrence.Range.TextRange, AreaType.EXACT_RANGE, 0,
+            HotspotSessionUi.CURRENT_HOTSPOT_HIGHLIGHTER,
+            new ErrorStripeAttributes(ErrorStripeKind.WARNING, "ReSharper Todo Item Marker on Error Stripe"),
+            null);
+
+          myShouldDropHighlightings = true;
+        }
+      });
+
+      
+    }
+
+    private void DropHighlightings()
+    {
+      var textControl = myTextControl;
+      if (textControl != null && myShouldDropHighlightings)
+      {
+        UpdateLocalOccurancesHighlight(textControl.Document, EmptyList<LocalOccurrence>.InstanceList);
+      }
     }
 
     private static void SearchInCurrentFile(
@@ -146,16 +252,19 @@ namespace JetBrains.ReSharper.GoToWord
 
     private class Foo1 : MenuItemDescriptor
     {
-      public Foo1(LocalOccurrence occurrence) : base("Line " + occurrence.LineNumber)
+      public Foo1(LocalOccurrence occurrence, string displayName, IconId sourceFileIcon)
+        : base(displayName + ":" + occurrence.LineNumber)
       {
-        Icon = PsiSymbolsThemedIcons.Const.Id;
+        Icon = sourceFileIcon ?? PsiSymbolsThemedIcons.Const.Id;
         Style = MenuItemStyle.Enabled;
 
+        //var left = Gradient(100, 255, occurrence.LeftFragment, SystemColors.GrayText);
+        //var right = Gradient(255, 100, occurrence.RightFragment, SystemColors.GrayText);
 
-        var left = Gradient(100, 255, occurrence.LeftFragment, SystemColors.GrayText);
-        var right = Gradient(255, 100, occurrence.RightFragment, SystemColors.GrayText);
-
-        ShortcutText = left.Append(occurrence.FoundText).Append(right);
+        ShortcutText = RichText.Empty
+          .Append(occurrence.LeftFragment, TextStyle.FromForeColor(SystemColors.GrayText))
+          .Append(occurrence.FoundText, new TextStyle(FontStyle.Bold, TextStyle.DefaultForegroundColor))
+          .Append(occurrence.RightFragment, TextStyle.FromForeColor(SystemColors.GrayText));
       }
 
       RichText Gradient(int from, int to, string text, Color baseColor)

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using JetBrains.ActionManagement;
 using JetBrains.Annotations;
@@ -7,12 +6,8 @@ using JetBrains.Application.DataContext;
 using JetBrains.Application.Progress;
 using JetBrains.DataFlow;
 using JetBrains.ProjectModel;
-using JetBrains.UI.Application;
 using JetBrains.UI.Application.Progress;
 using JetBrains.UI.Controls.GotoByName;
-using JetBrains.UI.GotoByName;
-using JetBrains.Util;
-using DataConstants = JetBrains.TextControl.DataContext.DataConstants;
 
 #if RESHARPER8
 using JetBrains.ReSharper.Feature.Services.Search;
@@ -20,7 +15,6 @@ using JetBrains.ReSharper.Features.Common.FindResultsBrowser;
 #elif RESHARPER81
 using JetBrains.ReSharper.Feature.Services.Navigation.Search;
 using JetBrains.ReSharper.Feature.Services.Occurences.Presentation;
-using JetBrains.Application.Threading.Tasks;
 #elif RESHARPER9
 using JetBrains.ReSharper.Feature.Services.Navigation.Goto.ProvidersAPI;
 using JetBrains.ReSharper.Feature.Services.Navigation;
@@ -45,8 +39,7 @@ namespace JetBrains.ReSharper.GoToWord
     public const string Id = "GotoWordIndex";
 #endif
 
-    public bool Update(
-      IDataContext context, ActionPresentation presentation, DelegateUpdate nextUpdate)
+    public bool Update(IDataContext context, ActionPresentation presentation, DelegateUpdate nextUpdate)
     {
       var solution = context.GetData(ProjectModel.DataContext.DataConstants.SOLUTION);
       var isUpdate = (solution != null);
@@ -61,78 +54,17 @@ namespace JetBrains.ReSharper.GoToWord
       var solution = context.GetData(ProjectModel.DataContext.DataConstants.SOLUTION);
       if (solution == null) return;
 
-      var lifetimeDefinition = Lifetimes.Define(solution.GetLifetime());
-      try
-      {
-        var projectFile = context.GetData(ProjectModel.DataContext.DataConstants.PROJECT_MODEL_ELEMENT) as IProjectFile;
+      var projectFile = context.GetData(ProjectModel.DataContext.DataConstants.PROJECT_MODEL_ELEMENT) as IProjectFile;
+      var textControl = context.GetData(TextControl.DataContext.DataConstants.TEXT_CONTROL);
+      var initialText = context.GetData(GotoByNameDataConstants.CurrentSearchText);
 
-        
+      var factory = Shell.Instance.GetComponent<GotoWordControllerFactory>();
+      var projectElement = (IProjectModelElement) projectFile ?? solution;
 
-        var controller = new GotoWordController(
-          lifetimeDefinition.Lifetime, Shell.Instance.GetComponent<IShellLocks>(),
-          projectFile);
-
-        
-
-
-        var menu = new GotoByNameMenu(
-          Shell.Instance.GetComponent<GotoByNameMenuComponent>(),
-          lifetimeDefinition,
-          controller.Model,
-          Shell.Instance.GetComponent<UIApplication>().MainWindow,
-          new GotoByNameDataConstants.SearchTextData("aaa", null));
-
-        //GC.KeepAlive(menu);
-      }
-      finally
-      {
-        //lifetimeDefinition.Terminate();
-      }
-
-      /*
-      Lifetimes.Define(
-        lifetime: solution.GetLifetime(),
-        FAtomic: (definition, lifetime) =>
-        {
-          var shell = Shell.Instance;
-          var shellLocks = shell.GetComponent<IShellLocks>();
-          var taskExecutor = shell.GetComponent<UITaskExecutor>();
-
-          var controller = new GotoWordIndexController(
-            definition.Lifetime, solution, LibrariesFlag.SolutionOnly, shellLocks
-#if RESHARPER81 || RESHARPER9
-            , shell.GetComponent<ITaskHost>()
-#endif
-            );
-
-          SetShowInFindResultsAction(controller, definition, shellLocks, taskExecutor);
-
-          var gotoByNameMenu = shell.GetComponent<GotoByNameMenuComponent>();
-          var uiApplication = shell.GetComponent<UIApplication>();
-          var initialText = context.GetData(GotoByNameDataConstants.CurrentSearchText);
-
-          var textControl = context.GetData(DataConstants.TEXT_CONTROL);
-          if (textControl != null)
-          {
-            var selection = textControl.Selection.Ranges.Value;
-            if (selection != null && selection.Count == 1)
-            {
-              var docRange = selection[0].ToDocRangeNormalized();
-              if (docRange.Length > 0)
-              {
-                var selectedText = textControl.Document.GetText(docRange);
-                initialText = new GotoByNameDataConstants.SearchTextData(
-                  selectedText, TextRange.FromLength(selectedText.Length));
-              }
-            }
-          }
-
-          new GotoByNameMenu(
-            gotoByNameMenu, definition, controller.Model,
-            uiApplication.MainWindow, initialText);
-        });*/
+      factory.ShowMenu(projectElement, initialText, textControl);
     }
 
+    // todo: rewrite
     private static void SetShowInFindResultsAction(
       [NotNull] GotoWordIndexController controller, [NotNull] LifetimeDefinition definition,
       [NotNull] IShellLocks shellLocks, [NotNull] UITaskExecutor taskExecutor)

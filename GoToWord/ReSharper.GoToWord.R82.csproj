@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Navigation\GotoWordController.cs" />
+    <Compile Include="Navigation\GotoWordControllerFactory.cs" />
     <Compile Include="Navigation\Presentation\GotoWordBrowserDescriptor.cs" />
     <Compile Include="Navigation\GotoWordIndexAction.cs" />
     <Compile Include="Navigation\GotoWordIndexController.cs" />
