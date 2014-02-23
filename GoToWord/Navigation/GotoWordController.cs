@@ -150,17 +150,6 @@ namespace JetBrains.ReSharper.GoToWord
         }
       }
 
-
-      //itemsConsumer(new JetPopupMenuItem[]
-      //{
-      //  new JetPopupMenuItem("aa", new SimpleMenuItem(filterString, null, () => { }))
-      //
-      //}, AddItemsBehavior.Replace);
-
-
-
-      //itemsConsumer(null, AddItemsBehavior.Append);
-
       return false;
     }
 
@@ -287,27 +276,6 @@ namespace JetBrains.ReSharper.GoToWord
           .Append(occurrence.LeftFragment, TextStyle.FromForeColor(SystemColors.GrayText))
           .Append(occurrence.FoundText, new TextStyle(FontStyle.Bold, TextStyle.DefaultForegroundColor))
           .Append(occurrence.RightFragment, TextStyle.FromForeColor(SystemColors.GrayText));
-      }
-
-      RichText Gradient(int from, int to, string text, Color baseColor)
-      {
-        var richText = RichText.Empty;
-        if (text.Length == 0) return richText;
-
-        var step = Math.Abs(from - to) / (double) text.Length;
-        if (from > to) step = -step;
-
-        var alpha = from;
-
-        foreach (var ch in text)
-        {
-          var foreColor = TextStyle.FromForeColor(Color.FromArgb(alpha, baseColor));
-          richText = richText.Append(char.ToString(ch), foreColor);
-
-          alpha = (int)(alpha + step);
-        }
-
-        return richText;
       }
     }
   }
