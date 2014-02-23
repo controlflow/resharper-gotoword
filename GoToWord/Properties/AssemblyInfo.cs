@@ -7,11 +7,11 @@ using JetBrains.Application.PluginSupport;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Shvedov Alexander")]
 [assembly: AssemblyProduct("ReSharper.GoToWord")]
-[assembly: AssemblyCopyright("Copyright Â© Shvedov Alexander, 2013")]
+[assembly: AssemblyCopyright("Copyright © Shvedov Alexander, 2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
-[assembly: AssemblyVersion("0.9.6.0")]
+[assembly: AssemblyVersion("0.9.8.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
 
 [assembly: ActionsXml("ReSharper.GoToWord.Actions.xml")]
