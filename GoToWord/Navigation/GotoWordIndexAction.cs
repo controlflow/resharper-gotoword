@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using JetBrains.ActionManagement;
 using JetBrains.Annotations;
@@ -60,6 +61,35 @@ namespace JetBrains.ReSharper.GoToWord
       var solution = context.GetData(ProjectModel.DataContext.DataConstants.SOLUTION);
       if (solution == null) return;
 
+      var lifetimeDefinition = Lifetimes.Define(solution.GetLifetime());
+      try
+      {
+        var projectFile = context.GetData(ProjectModel.DataContext.DataConstants.PROJECT_MODEL_ELEMENT) as IProjectFile;
+
+        
+
+        var controller = new GotoWordController(
+          lifetimeDefinition.Lifetime, Shell.Instance.GetComponent<IShellLocks>(),
+          projectFile);
+
+        
+
+
+        var menu = new GotoByNameMenu(
+          Shell.Instance.GetComponent<GotoByNameMenuComponent>(),
+          lifetimeDefinition,
+          controller.Model,
+          Shell.Instance.GetComponent<UIApplication>().MainWindow,
+          new GotoByNameDataConstants.SearchTextData("aaa", null));
+
+        //GC.KeepAlive(menu);
+      }
+      finally
+      {
+        //lifetimeDefinition.Terminate();
+      }
+
+      /*
       Lifetimes.Define(
         lifetime: solution.GetLifetime(),
         FAtomic: (definition, lifetime) =>
@@ -100,7 +130,7 @@ namespace JetBrains.ReSharper.GoToWord
           new GotoByNameMenu(
             gotoByNameMenu, definition, controller.Model,
             uiApplication.MainWindow, initialText);
-        });
+        });*/
     }
 
     private static void SetShowInFindResultsAction(

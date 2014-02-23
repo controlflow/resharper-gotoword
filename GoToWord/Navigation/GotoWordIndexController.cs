@@ -3,7 +3,6 @@ using JetBrains.Annotations;
 using JetBrains.Application;
 using JetBrains.DataFlow;
 using JetBrains.ProjectModel;
-
 #if RESHARPER8
 using JetBrains.ReSharper.Feature.Services.Search;
 #elif RESHARPER81
@@ -43,6 +42,8 @@ namespace JetBrains.ReSharper.GoToWord
 
     protected override ICollection<ChainedNavigationItemData> InitScopes(bool isSearchingInLibs)
     {
+      
+
       var scope = new SolutionNavigationScope(ScopeData as ISolution, isSearchingInLibs);
       return new[] { new ChainedNavigationItemData(null, scope) };
     }

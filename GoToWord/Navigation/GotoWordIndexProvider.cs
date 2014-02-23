@@ -87,6 +87,8 @@ namespace JetBrains.ReSharper.GoToWord
     [NotNull] private static readonly Key<object> GoToWordFirstTimeLookup =
       new Key<object>("GoToWordFirstTimeLookup");
 
+    
+
     [NotNull] public IEnumerable<MatchingInfo> FindMatchingInfos(
       [NotNull] IdentifierMatcher matcher, [NotNull] INavigationScope scope,
       [NotNull] GotoContext gotoContext, [NotNull] CheckForInterrupt checkCanceled)
@@ -94,19 +96,33 @@ namespace JetBrains.ReSharper.GoToWord
       var solution = scope.GetSolution();
       if (solution == null) return EmptyList<MatchingInfo>.InstanceList;
 
+      var navigationScope = scope as FileMemberNavigationScope;
+      if (navigationScope != null)
+      {
+        var sourceFile = navigationScope.GetPrimarySourceFile();
+        var consumer = new List<IOccurence>();
+        SearchInFile(matcher.Filter, sourceFile, consumer, checkCanceled);
+
+        foreach (var occurence in consumer)
+        {
+          //return new MatchingInfo(matcher.Filter, EmptyList<IdentifierMatch>.InstanceList);
+        }
+      }
+
+
       var filterText = matcher.Filter;
       var occurrences = new List<IOccurence>();
 
       myShellLocks.AssertReadAccessAllowed();
 
-      if (scope.ExtendedSearchFlag == LibrariesFlag.SolutionOnly)
-      {
-        FindByWords(filterText, solution, occurrences, gotoContext, checkCanceled);
-      }
-      else
-      {
-        FindTextual(filterText, solution, occurrences, checkCanceled);
-      }
+      //if (scope.ExtendedSearchFlag == LibrariesFlag.SolutionOnly)
+      //{
+      //  FindByWords(filterText, solution, occurrences, gotoContext, checkCanceled);
+      //}
+      //else
+      //{
+      //  FindTextual(filterText, solution, occurrences, checkCanceled);
+      //}
 
       if (occurrences.Count > 0)
       {
@@ -151,6 +167,8 @@ namespace JetBrains.ReSharper.GoToWord
       [NotNull] string searchText, [NotNull] ISolution solution,
       [NotNull] List<IOccurence> consumer, [NotNull] CheckForInterrupt checkCanceled)
     {
+
+
 #if RESHARPER8
       using (var pool = new MultiCoreFibersPool(GoToWordPoolName, myShellLocks, myConfigurations))
       using (var fibers = pool.Create("Files scan for textual occurances"))
