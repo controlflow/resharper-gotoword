@@ -15,7 +15,7 @@ using JetBrains.ReSharper.Feature.Services.Tree;
 using JetBrains.Application.ComponentModel;
 #endif
 
-namespace JetBrains.ReSharper.ControlFlow.GoToWord
+namespace JetBrains.ReSharper.GoToWord
 {
   [ShellFeaturePart]
   public class GotoWordSectionProvider : OccurenceSectionProvider

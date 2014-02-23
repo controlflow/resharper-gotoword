@@ -21,7 +21,6 @@ using JetBrains.ReSharper.Feature.Services.Navigation.Search;
 using JetBrains.ReSharper.Feature.Services.Occurences.Presentation;
 using JetBrains.Application.Threading.Tasks;
 #elif RESHARPER9
-using IActionHandler = JetBrains.UI.ActionsRevised.IAction;
 using JetBrains.ReSharper.Feature.Services.Navigation.Goto.ProvidersAPI;
 using JetBrains.ReSharper.Feature.Services.Navigation;
 using JetBrains.ReSharper.Feature.Services.Presentation;
@@ -29,7 +28,7 @@ using JetBrains.Application.Threading.Tasks;
 using JetBrains.UI.ActionsRevised;
 #endif
 
-namespace JetBrains.ReSharper.ControlFlow.GoToWord
+namespace JetBrains.ReSharper.GoToWord
 {
 #if RESHARPER8 || RESHARPER81
 
@@ -46,7 +45,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord
   }
 
   [ActionHandler(typeof(GotoWordIndexAction))]
-  public class GotoWordIndexActionHandler : IActionHandler
+  public class GotoWordIndexActionHandler : IAction
   {
 #endif
 

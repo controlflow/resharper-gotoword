@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 using JetBrains.ReSharper.Psi;
 using JetBrains.Util;
 
-namespace JetBrains.ReSharper.ControlFlow.GoToWord.Hacks
+namespace JetBrains.ReSharper.GoToWord.Hacks
 {
   // NOTE: please, do not try this at home
   internal sealed class SourceFileToBuildCacheProperties : IPsiSourceFileProperties

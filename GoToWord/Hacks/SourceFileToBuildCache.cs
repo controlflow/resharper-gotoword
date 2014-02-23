@@ -8,7 +8,7 @@ using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.Modules;
 using JetBrains.Util;
 
-namespace JetBrains.ReSharper.ControlFlow.GoToWord.Hacks
+namespace JetBrains.ReSharper.GoToWord.Hacks
 {
   // NOTE: please, do not try this it at home
   internal sealed class SourceFileToBuildCache : IPsiSourceFile

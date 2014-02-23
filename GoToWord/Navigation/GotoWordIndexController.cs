@@ -21,7 +21,7 @@ using JetBrains.ReSharper.Feature.Services.Navigation.Goto.Misc;
 using JetBrains.Application.Threading.Tasks;
 #endif
 
-namespace JetBrains.ReSharper.ControlFlow.GoToWord
+namespace JetBrains.ReSharper.GoToWord
 {
   public class GotoWordIndexController
     : GotoControllerBase<IGotoWordIndexProvider, IGotoWordIndexProvider>

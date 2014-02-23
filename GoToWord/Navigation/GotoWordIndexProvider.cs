@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using JetBrains.Application;
 using JetBrains.ProjectModel;
-using JetBrains.ReSharper.ControlFlow.GoToWord.Hacks;
+using JetBrains.ReSharper.GoToWord.Hacks;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.Caches;
 using JetBrains.ReSharper.Psi.Modules;
@@ -38,7 +38,7 @@ using JetBrains.ReSharper.Feature.Services.Occurences;
 using CheckForInterrupt = System.Func<bool>;
 #endif
 
-namespace JetBrains.ReSharper.ControlFlow.GoToWord
+namespace JetBrains.ReSharper.GoToWord
 {
   [ShellFeaturePart]
   public sealed class GotoWordIndexProvider : IGotoWordIndexProvider

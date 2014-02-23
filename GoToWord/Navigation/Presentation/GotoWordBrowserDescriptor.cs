@@ -17,7 +17,7 @@ using JetBrains.ReSharper.Feature.Services.Tree;
 using JetBrains.ReSharper.Feature.Services.Navigation;
 #endif
 
-namespace JetBrains.ReSharper.ControlFlow.GoToWord
+namespace JetBrains.ReSharper.GoToWord
 {
   public sealed class GotoWordBrowserDescriptor : OccurenceBrowserDescriptor
   {

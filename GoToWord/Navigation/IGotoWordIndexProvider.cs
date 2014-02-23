@@ -6,7 +6,7 @@ using JetBrains.ReSharper.Feature.Services.Navigation.Goto.ProvidersAPI;
 using JetBrains.ReSharper.Feature.Services.Navigation.Goto.ProvidersAPI.ChainedProviders;
 #endif
 
-namespace JetBrains.ReSharper.ControlFlow.GoToWord
+namespace JetBrains.ReSharper.GoToWord
 {
   public interface IGotoWordIndexProvider
     : IOccurenceNavigationProvider, IChainedSearchProvider { }

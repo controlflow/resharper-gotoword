@@ -4,17 +4,18 @@ using JetBrains.Application;
 using JetBrains.Application.DataContext;
 using JetBrains.DataFlow;
 using JetBrains.Util.Logging;
+using DataConstants = JetBrains.ProjectModel.DataContext.DataConstants;
 
 #if RESHARPER8 || RESHARPER81
 using JetBrains.ReSharper.Features.Common.GoToByName.Controllers;
 using JetBrains.ReSharper.Features.Finding.GoToType;
 #elif RESHARPER9
-using IActionHandler = JetBrains.UI.ActionsRevised.IAction;
+using IActionHandler = JetBrains.UI.ActionsRevised.IExecutableAction;
 using JetBrains.ReSharper.Feature.Services.Navigation.Goto.Controllers;
 using JetBrains.ReSharper.Features.Navigation.Features.Goto.GoToType;
 #endif
 
-namespace JetBrains.ReSharper.ControlFlow.GoToWord.Hacks
+namespace JetBrains.ReSharper.GoToWord.Hacks
 {
   [ShellComponent]
   public class TripleGoToEverythingActionHandler : IActionHandler
@@ -37,6 +38,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord.Hacks
       var gotoTypeAction = actionManager.Defs.TryGetActionDefById(gotoTypeActionId);
       if (gotoTypeAction != null)
       {
+        lifetime.AddAction(() => actionManager.Handlers.RemoveHandler(gotoTypeAction, this));
         actionManager.Handlers.AddHandler(gotoTypeAction, this);
       }
 #endif
@@ -44,7 +46,7 @@ namespace JetBrains.ReSharper.ControlFlow.GoToWord.Hacks
 
     public bool Update(IDataContext context, ActionPresentation presentation, DelegateUpdate nextUpdate)
     {
-      return nextUpdate();
+      return context.CheckAllNotNull(DataConstants.SOLUTION);
     }
 
     public void Execute(IDataContext context, DelegateExecute nextExecute)

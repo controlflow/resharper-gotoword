@@ -8,7 +8,7 @@ using JetBrains.ReSharper.Features.Common.ComponentsAPI;
 using JetBrains.ReSharper.Feature.Services.Navigation.Goto.ProvidersAPI;
 #endif
 
-namespace JetBrains.ReSharper.ControlFlow.GoToWord
+namespace JetBrains.ReSharper.GoToWord
 {
   [SolutionComponent]
   public class GotoWordModelInitializer : IModelInitializer
