@@ -4,6 +4,7 @@ using JetBrains.Application;
 using JetBrains.DataFlow;
 using JetBrains.ProjectModel;
 using JetBrains.TextControl;
+using JetBrains.TextControl.DocumentMarkup;
 using JetBrains.UI.Application;
 using JetBrains.UI.Controls.GotoByName;
 using JetBrains.UI.GotoByName;
@@ -14,17 +15,20 @@ namespace JetBrains.ReSharper.GoToWord
   [ShellComponent]
   public sealed class GotoWordControllerFactory
   {
-    [NotNull] private readonly IShellLocks myShellLocks;
-    [NotNull] private readonly UIApplication myUiApplication;
-    [NotNull] private readonly GotoByNameMenuComponent myMenuComponent;
+    [NotNull] readonly IShellLocks myShellLocks;
+    [NotNull] readonly UIApplication myUiApplication;
+    [NotNull] readonly GotoByNameMenuComponent myMenuComponent;
+    [NotNull] readonly IDocumentMarkupManager myMarkupManager;
 
-    public GotoWordControllerFactory(
-      [NotNull] IShellLocks shellLocks, [NotNull] UIApplication uiApplication,
-      [NotNull] GotoByNameMenuComponent menuComponent)
+    public GotoWordControllerFactory([NotNull] IShellLocks shellLocks,
+                                     [NotNull] UIApplication uiApplication,
+                                     [NotNull] GotoByNameMenuComponent menuComponent,
+                                     [NotNull] IDocumentMarkupManager markupManager)
     {
       myShellLocks = shellLocks;
       myUiApplication = uiApplication;
       myMenuComponent = menuComponent;
+      myMarkupManager = markupManager;
     }
 
     public void ShowMenu(
@@ -35,7 +39,7 @@ namespace JetBrains.ReSharper.GoToWord
       var definition = Lifetimes.Define(solution.GetLifetime());
 
       var controller = new GotoWordController(
-        definition.Lifetime, myShellLocks, projectElement, textControl);
+        definition.Lifetime, myShellLocks, projectElement, textControl, myMarkupManager);
 
       if (textControl != null)
       {
