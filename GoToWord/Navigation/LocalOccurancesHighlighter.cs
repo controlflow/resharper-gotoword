@@ -193,7 +193,7 @@ namespace JetBrains.ReSharper.GoToWord
         occurencesByRange[occurence.Range.TextRange] = occurence;
 
       var operationIndex = 0;
-      const int operationsPerQueue = 100;
+      const int operationsPerQueue = 1000;
 
       // collect and remove obsolete hightlightings
       if (myShouldDropHighlightings)

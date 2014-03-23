@@ -110,20 +110,35 @@ namespace JetBrains.ReSharper.GoToWord
         if (filterString.Length > 0)
         {
           var occurences = SearchInCurrentFile(filterString, currentFile).ToList();
-          var xs = new List<JetPopupMenuItem>();
+          //var xs = new List<JetPopupMenuItem>();
 
           var presentationService = Shell.Instance.GetComponent<PsiSourceFilePresentationService>();
           var sourceFileIcon = presentationService.GetIconId(currentFile);
           var displayName = currentFile.Name;
 
-          foreach (var occurence in occurences.Take(10))
-          {
-            var descriptor = new Foo1(occurence, displayName, sourceFileIcon);
-            var item = new JetPopupMenuItem(occurence, descriptor);
-            xs.Add(item);
-          }
+          var e = occurences.Take(500).GetEnumerator();
 
-          itemsConsumer(xs, AddItemsBehavior.Replace);
+          var items = new List<JetPopupMenuItem>();
+
+          Action action = null;
+          action = () =>
+          {
+            if (e.MoveNext())
+            {
+              var descriptor = new Foo1(e.Current, displayName, sourceFileIcon);
+              var item = new JetPopupMenuItem(e.Current, descriptor);
+              items.Add(item);
+
+              myShellLocks.QueueReadLock("aaa", action);
+
+              itemsConsumer(items, AddItemsBehavior.Replace);
+            }
+          };
+
+
+          myShellLocks.QueueReadLock("aa", action);
+
+          
 
           if (myHighlighter != null)
             myHighlighter.UpdateOccurances(occurences);
@@ -138,7 +153,6 @@ namespace JetBrains.ReSharper.GoToWord
       return false;
     }
 
-    // todo: make lazy
     private static IEnumerable<LocalOccurrence> SearchInCurrentFile(
       [NotNull] string searchText, [NotNull] IPsiSourceFile sourceFile)
     {
