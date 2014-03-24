@@ -62,7 +62,7 @@
     <EmbeddedResource Include="Actions.xml" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ReSharper.GoToWord.R80.packages.config" />
+    <None Include="packages.ReSharper.GoToWord.R80.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
