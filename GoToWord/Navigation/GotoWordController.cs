@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -12,13 +13,13 @@ using JetBrains.ReSharper.Psi.Resources;
 using JetBrains.ReSharper.Psi.Services.Presentation;
 using JetBrains.TextControl;
 using JetBrains.TextControl.DocumentMarkup;
+using JetBrains.Threading;
 using JetBrains.UI.GotoByName;
 using JetBrains.UI.Icons;
 using JetBrains.UI.PopupMenu;
 using JetBrains.UI.PopupMenu.Impl;
 using JetBrains.UI.RichText;
 using JetBrains.Util;
-using JetBrains.Util.dataStructures.TypedIntrinsics;
 
 namespace JetBrains.ReSharper.GoToWord
 {
@@ -103,48 +104,37 @@ namespace JetBrains.ReSharper.GoToWord
     {
       // todo: drop highlightings when empty filter
       // todo: fill recent searches when empty
+      // todo: what thread is it?
 
       var currentFile = myCurrentFile;
       if (currentFile != null)
       {
         if (filterString.Length > 0)
         {
-          var occurences = SearchInCurrentFile(filterString, currentFile).ToList();
-          //var xs = new List<JetPopupMenuItem>();
-
+          var lazyOccurences = SearchInCurrentFile(filterString, currentFile);
           var presentationService = Shell.Instance.GetComponent<PsiSourceFilePresentationService>();
           var sourceFileIcon = presentationService.GetIconId(currentFile);
           var displayName = currentFile.Name;
 
-          var e = occurences.Take(500).GetEnumerator();
+          IEnumerable<LocalOccurrence> tailOccurences;
+          var occurences = lazyOccurences.TakeFirstAndTail(40, out tailOccurences);
 
-          var items = new List<JetPopupMenuItem>();
-
-          Action action = null;
-          action = () =>
+          var menuItems = new List<JetPopupMenuItem>();
+          foreach (var localOccurrence in occurences)
           {
-            if (e.MoveNext())
-            {
-              var descriptor = new Foo1(e.Current, displayName, sourceFileIcon);
-              var item = new JetPopupMenuItem(e.Current, descriptor);
-              items.Add(item);
+            var descriptor = new Foo1(localOccurrence, displayName, sourceFileIcon);
+            var item = new JetPopupMenuItem(localOccurrence, descriptor);
+            menuItems.Add(item);
+          }
 
-              myShellLocks.QueueReadLock("aaa", action);
-
-              itemsConsumer(items, AddItemsBehavior.Replace);
-            }
-          };
-
-
-          myShellLocks.QueueReadLock("aa", action);
-
-          
+          itemsConsumer(menuItems, AddItemsBehavior.Replace);
 
           if (myHighlighter != null)
-            myHighlighter.UpdateOccurances(occurences);
+            myHighlighter.UpdateOccurances(occurences, tailOccurences);
         }
         else
         {
+          // todo: do not do it? revert viewport?
           if (myHighlighter != null)
             myHighlighter.UpdateOccurances(EmptyList<LocalOccurrence>.InstanceList);
         }
@@ -152,6 +142,8 @@ namespace JetBrains.ReSharper.GoToWord
 
       return false;
     }
+
+    
 
     private static IEnumerable<LocalOccurrence> SearchInCurrentFile(
       [NotNull] string searchText, [NotNull] IPsiSourceFile sourceFile)
@@ -225,5 +217,54 @@ namespace JetBrains.ReSharper.GoToWord
     public string FoundText { get { return myFoundText; } }
     public string LeftFragment { get { return myLeftFragment; } }
     public string RightFragment { get { return myRightFragment; } }
+  }
+
+  static class EnumerableEx
+  {
+    [NotNull] public static IList<T> TakeFirstAndTail<T>(
+      [NotNull] this IEnumerable<T> source, int count, [NotNull] out IEnumerable<T> tailItems)
+    {
+      Assertion.Assert(count >= 0, "count >= 0");
+
+      var hasTail = false;
+      var list = new LocalList<T>();
+      var enumerator = source.GetEnumerator();
+      try
+      {
+        while (count > 0)
+        {
+          if (enumerator.MoveNext())
+          {
+            list.Add(enumerator.Current);
+            count--;
+          }
+          else
+          {
+            tailItems = EmptyList<T>.InstanceList;
+            return list.ResultingList();
+          }
+        }
+
+        hasTail = true;
+        tailItems = TailEnumerable(enumerator);
+        return list.ResultingList();
+      }
+      finally
+      {
+        if (!hasTail) enumerator.Dispose();
+      }
+    }
+
+    [NotNull]
+    private static IEnumerable<T> TailEnumerable<T>([NotNull] IEnumerator<T> enumerator)
+    {
+      using (enumerator)
+      {
+        while (enumerator.MoveNext())
+        {
+          yield return enumerator.Current;
+        }
+      }
+    }
   }
 }

@@ -72,7 +72,7 @@ namespace JetBrains.ReSharper.GoToWord.Hacks
         }
 #endif
 
-        Logger.LogError("Action {0} is not found!", GotoWordIndexAction.Id);
+        Logger.LogError("Action '{0}' is not found!", GotoWordIndexAction.Id);
       }
 
       nextExecute();

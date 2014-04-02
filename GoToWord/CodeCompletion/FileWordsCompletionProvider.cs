@@ -9,7 +9,7 @@ using JetBrains.Util;
 namespace JetBrains.ReSharper.GoToWord.CodeCompletion
 {
   [Language(typeof(CSharpLanguage))]
-  class FileWordsCompletionProvider : ICodeCompletionItemsProvider
+  public class FileWordsCompletionProvider : ICodeCompletionItemsProvider
   {
     public object IsAvailable(ISpecificCodeCompletionContext context)
     {

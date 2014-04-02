@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using JetBrains.Annotations;
 using JetBrains.Application;
@@ -10,6 +11,7 @@ using JetBrains.ReSharper.Feature.Services.Navigation.CustomHighlighting;
 using JetBrains.TextControl;
 using JetBrains.TextControl.DocumentMarkup;
 using JetBrains.TextControl.Graphics;
+using JetBrains.Threading;
 using JetBrains.Util;
 using JetBrains.Util.dataStructures.TypedIntrinsics;
 
@@ -23,8 +25,8 @@ namespace JetBrains.ReSharper.GoToWord
     [NotNull] readonly IDocumentMarkupManager myMarkupManager;
     [NotNull] readonly SequentialLifetimes mySequentialOccurances;
     [NotNull] readonly SequentialLifetimes mySequentialFocused;
-    [NotNull] readonly Rect myInitialRect;
     [NotNull] readonly object mySyncRoot;
+    readonly Rect myTextControlViewportRect;
 
     volatile bool myShouldDropHighlightings;
     volatile bool myUpdateSelectedScheduled;
@@ -42,13 +44,16 @@ namespace JetBrains.ReSharper.GoToWord
       myTextControl = textControl;
       mySequentialOccurances = new SequentialLifetimes(lifetime);
       mySequentialFocused = new SequentialLifetimes(lifetime);
-      myInitialRect = textControl.Scrolling.ViewportRect.Value;
+      myTextControlViewportRect = textControl.Scrolling.ViewportRect.Value;
+
       mySyncRoot = new object();
 
       myLifetime.AddAction(DropHighlightings);
     }
 
-    public void UpdateOccurances([NotNull] IList<LocalOccurrence> occurrences)
+    public void UpdateOccurances(
+      [NotNull] IList<LocalOccurrence> occurrences,
+      [NotNull] IEnumerable<LocalOccurrence> tailOccurences = null)
     {
       lock (mySyncRoot)
       {
@@ -57,36 +62,21 @@ namespace JetBrains.ReSharper.GoToWord
 
         if (!myShouldDropHighlightings && occurrences.Count == 0) return;
 
-        mySequentialFocused.Next(lifetime =>
-        {
-          myShellLocks.ExecuteOrQueueReadLock(
-            lifetime, Prefix + "UpdateOccurance", UpdateFocusedOccurence);
-        });
-
         mySequentialOccurances.Next(lifetime =>
         {
-          var interval = TimeSpan.FromMilliseconds((myOccurrences.Count > 10) ? 100 : 5);
-          var updateIterator = UpdateOccurencesHighlighting(lifetime).GetEnumerator();
-          lifetime.AddDispose(updateIterator);
+          myShellLocks.ExecuteOrQueueReadLock(
+            lifetime, Prefix + "UpdateOccurance", () =>
+              UpdateOccurencesHighlighting(lifetime, occurrences));
 
-          Action recursiveAction = null;
-          recursiveAction = () =>
-          {
-            if (!lifetime.IsTerminated && updateIterator.MoveNext())
-            {
-              myShellLocks.QueueWithReadLockWhenReadLockAvailable(
-                lifetime, Prefix + "UpdateOccurances", TimeSpan.FromMilliseconds(1),
-                recursiveAction.NotNull());
-            }
-            else
-            {
-              updateIterator.Dispose();
-            }
-          };
-
-          myShellLocks.QueueWithReadLockWhenReadLockAvailable(
-            lifetime, Prefix + "UpdateOccurances", interval, recursiveAction);
           myUpdateSelectedScheduled = true;
+        });
+
+        mySequentialFocused.Next(lifetime =>
+        {
+          myShellLocks.AssertReadAccessAllowed();
+
+          myShellLocks.ExecuteOrQueueReadLock(
+            lifetime, Prefix + "UpdateOccurance", UpdateFocusedOccurence);
         });
       }
     }
@@ -95,8 +85,10 @@ namespace JetBrains.ReSharper.GoToWord
     {
       lock (mySyncRoot)
       {
-        Assertion.Assert(myOccurrences != null, "myOccurrences != null");
-        Assertion.Assert(myOccurrences.Contains(occurrence), "myOccurrences.Contains(occurrence)");
+        var occurrences = myOccurrences.NotNull("occurrences != null");
+
+        // late selection change event may happend - ignore
+        if (!occurrences.Contains(occurrence)) return;
 
         mySelectedOccurrence = occurrence;
 
@@ -125,8 +117,9 @@ namespace JetBrains.ReSharper.GoToWord
         {
           myShellLocks.ExecuteOrQueueReadLock(Prefix + "DropHighlightings", () =>
           {
+            UpdateOccurencesHighlighting(
+              EternalLifetime.Instance, EmptyList<LocalOccurrence>.InstanceList);
             UpdateFocusedOccurence();
-            foreach (var _ in UpdateOccurencesHighlighting(EternalLifetime.Instance)) { }
           });
         }
       }
@@ -166,34 +159,23 @@ namespace JetBrains.ReSharper.GoToWord
         myShouldDropHighlightings = true;
 
         // todo: better positioning
+        var position = Math.Max(selectedOccurrence.LineNumber - 2, 0);
         var target = myTextControl.Coords.FromDocLineColumn(
-          new DocumentCoords((Int32<DocLine>)(Math.Max(selectedOccurrence.LineNumber - 2, 0)), (Int32<DocColumn>)0));
+          new DocumentCoords((Int32<DocLine>)position, (Int32<DocColumn>)0));
         myTextControl.Scrolling.ScrollTo(target, TextControlScrollType.TopOfView);
       }
       else
       {
-        myTextControl.Scrolling.ScrollTo(myInitialRect.Location);
+        myTextControl.Scrolling.ScrollTo(myTextControlViewportRect.Location);
       }
     }
 
-    IEnumerable<bool> UpdateOccurencesHighlighting([NotNull] Lifetime updateLifetime)
+    void UpdateOccurencesHighlighting(
+      [NotNull] Lifetime updateLifetime, [NotNull] IList<LocalOccurrence> occurences)
     {
-      if (updateLifetime.IsTerminated) yield break;
-
-      IList<LocalOccurrence> occurences;
-      lock (mySyncRoot)
-      {
-        occurences = myOccurrences ?? EmptyList<LocalOccurrence>.InstanceList;
-      }
+      if (updateLifetime.IsTerminated) return;
 
       var documentMarkup = myMarkupManager.GetMarkupModel(myTextControl.Document);
-      var occurencesByRange = new Dictionary<TextRange, LocalOccurrence>();
-
-      foreach (var occurence in occurences)
-        occurencesByRange[occurence.Range.TextRange] = occurence;
-
-      var operationIndex = 0;
-      const int operationsPerQueue = 1000;
 
       // collect and remove obsolete hightlightings
       if (myShouldDropHighlightings)
@@ -202,28 +184,27 @@ namespace JetBrains.ReSharper.GoToWord
 
         foreach (var highlighter in documentMarkup.GetHighlightersEnumerable(GotoWordOccurance))
         {
-          if (updateLifetime.IsTerminated) yield break;
+          if (updateLifetime.IsTerminated) return;
 
-          if (!occurencesByRange.Remove(highlighter.Range))
-            toRemove.Add(highlighter);
+          toRemove.Add(highlighter);
         }
 
         foreach (var highlighter in toRemove)
         {
-          if (updateLifetime.IsTerminated) yield break;
-          if (operationIndex++ % operationsPerQueue == 0) yield return true;
+          if (updateLifetime.IsTerminated) return;
+
 
           documentMarkup.RemoveHighlighter(highlighter);
         }
       }
 
       // add new highlighters
-      foreach (var occurrence in occurencesByRange)
+      foreach (var occurrence in occurences)
       {
-        if (updateLifetime.IsTerminated) yield break;
-        if (operationIndex++ % operationsPerQueue == 0) yield return true;
+        if (updateLifetime.IsTerminated) return;
 
-        documentMarkup.AddHighlighter(GotoWordOccurance, occurrence.Key, AreaType.EXACT_RANGE, 0,
+        documentMarkup.AddHighlighter(
+          GotoWordOccurance, occurrence.Range.TextRange, AreaType.EXACT_RANGE, 0,
           HotspotSessionUi.CURRENT_HOTSPOT_HIGHLIGHTER, ErrorStripeUsagesAttributes, null);
 
         myShouldDropHighlightings = true;
