@@ -1,19 +1,17 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using JetBrains.Annotations;
 using JetBrains.Application;
 using JetBrains.DataFlow;
 using JetBrains.DocumentModel;
 using JetBrains.ProjectModel;
+using JetBrains.ReSharper.Feature.Services.Presentation;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.Resources;
-using JetBrains.ReSharper.Psi.Services.Presentation;
+using JetBrains.ReSharper.Resources.Shell;
 using JetBrains.TextControl;
 using JetBrains.TextControl.DocumentMarkup;
-using JetBrains.Threading;
 using JetBrains.UI.GotoByName;
 using JetBrains.UI.Icons;
 using JetBrains.UI.PopupMenu;
@@ -36,7 +34,7 @@ namespace JetBrains.ReSharper.GoToWord
     [NotNull] readonly IProperty<object> mySelectedItem;
     [CanBeNull] readonly IPsiSourceFile myCurrentFile;
     [CanBeNull] readonly ITextControl myTextControl;
-    [CanBeNull] readonly LocalOccurancesHighlighter myHighlighter;
+    [CanBeNull] readonly LocalOccurrencesHighlighter myHighlighter;
 
     public GotoWordController([NotNull] Lifetime lifetime,
                               [NotNull] IShellLocks shellLocks,
@@ -57,7 +55,7 @@ namespace JetBrains.ReSharper.GoToWord
 
         if (textControl != null)
         {
-          myHighlighter = new LocalOccurancesHighlighter(
+          myHighlighter = new LocalOccurrencesHighlighter(
             lifetime, shellLocks, textControl, markupManager);
           SelectedItem.Change.Advise(lifetime, AdviceSelectionItem);
         }
@@ -79,7 +77,7 @@ namespace JetBrains.ReSharper.GoToWord
       var occurrence = args.New as LocalOccurrence;
       if (occurrence != null)
       {
-        myHighlighter.NotNull().UpdateSelectedOccurence(occurrence);
+        myHighlighter.NotNull().UpdateSelectedOccurrence(occurrence);
       }
     }
 
@@ -116,8 +114,8 @@ namespace JetBrains.ReSharper.GoToWord
           var sourceFileIcon = presentationService.GetIconId(currentFile);
           var displayName = currentFile.Name;
 
-          IEnumerable<LocalOccurrence> tailOccurences;
-          var occurences = lazyOccurences.TakeFirstAndTail(40, out tailOccurences);
+          IEnumerable<LocalOccurrence> tailConcurrences;
+          var occurences = lazyOccurences.TakeFirstAndTail(40, out tailConcurrences);
 
           var menuItems = new List<JetPopupMenuItem>();
           foreach (var localOccurrence in occurences)
@@ -130,13 +128,13 @@ namespace JetBrains.ReSharper.GoToWord
           itemsConsumer(menuItems, AddItemsBehavior.Replace);
 
           if (myHighlighter != null)
-            myHighlighter.UpdateOccurances(occurences, tailOccurences);
+            myHighlighter.UpdateOccurrences(occurences, tailConcurrences);
         }
         else
         {
           // todo: do not do it? revert viewport?
           if (myHighlighter != null)
-            myHighlighter.UpdateOccurances(EmptyList<LocalOccurrence>.InstanceList);
+            myHighlighter.UpdateOccurrences(EmptyList<LocalOccurrence>.InstanceList);
         }
       }
 

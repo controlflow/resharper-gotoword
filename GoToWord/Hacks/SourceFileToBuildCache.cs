@@ -46,6 +46,7 @@ namespace JetBrains.ReSharper.GoToWord.Hacks
     public IPsiSourceFileProperties Properties { get { return SourceFileToBuildCacheProperties.Instance; } }
     public IPsiSourceFileStorage PsiStorage { get { return myOriginal.PsiStorage; } }
     public int? InMemoryModificationStamp { get { return myOriginal.InMemoryModificationStamp; } }
+    public int? ExternalModificationStamp { get { return myOriginal.ExternalModificationStamp; } }
     public DateTime LastWriteTimeUtc { get { return myOriginal.LastWriteTimeUtc; } }
     public IModuleReferenceResolveContext ResolveContext { get { return myOriginal.ResolveContext; } }
 

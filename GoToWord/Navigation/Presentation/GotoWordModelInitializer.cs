@@ -1,9 +1,9 @@
 using JetBrains.DataFlow;
 using JetBrains.ProjectModel;
-using JetBrains.UI.GotoByName;
 using JetBrains.ReSharper.Feature.Services.Navigation.Goto.ProvidersAPI;
+using JetBrains.UI.GotoByName;
 
-namespace JetBrains.ReSharper.GoToWord
+namespace JetBrains.ReSharper.GoToWord.Navigation.Presentation
 {
   [SolutionComponent]
   public class GotoWordModelInitializer : IModelInitializer

@@ -14,7 +14,7 @@
     </description>
     <copyright>Copyright © Alexander Shvedov, 2015</copyright>
     <dependencies>
-      <dependency id="Wave" version="[1.0]" />
+      <dependency id="$ReSharperDep$" version="$ReSharperVer$" />
     </dependencies>
     <releaseNotes>
       GoToWord 2 for ReSharper 9.0.

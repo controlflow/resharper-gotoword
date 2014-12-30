@@ -52,8 +52,7 @@ namespace JetBrains.ReSharper.GoToWord
           if (docRange.Length > 0)
           {
             var selectedText = textControl.Document.GetText(docRange);
-            initialText = new GotoByNameDataConstants.SearchTextData(
-              selectedText, TextRange.FromLength(selectedText.Length));
+            initialText = new GotoByNameDataConstants.SearchTextData(selectedText, TextRange.FromLength(selectedText.Length));
           }
         }
       }

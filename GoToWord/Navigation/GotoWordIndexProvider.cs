@@ -9,19 +9,16 @@ using JetBrains.ReSharper.GoToWord.Hacks;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.Caches;
 using JetBrains.ReSharper.Psi.Modules;
-using JetBrains.ReSharper.Feature.Services.CodeCompletion;
 using JetBrains.Text;
 using JetBrains.Util;
 using JetBrains.DocumentModel;
 using JetBrains.DataFlow;
 using JetBrains.Application.ComponentModel;
 using JetBrains.Application.Threading.Tasks;
-using JetBrains.ReSharper.Feature.Services.Navigation;
 using JetBrains.ReSharper.Feature.Services.Navigation.Goto.Misc;
 using JetBrains.ReSharper.Feature.Services.Navigation.Goto.ProvidersAPI;
 using JetBrains.ReSharper.Feature.Services.Occurences;
 using JetBrains.ReSharper.Resources.Shell;
-using CheckForInterrupt = System.Func<bool>;
 
 namespace JetBrains.ReSharper.GoToWord
 {
@@ -33,23 +30,20 @@ namespace JetBrains.ReSharper.GoToWord
     [NotNull] private readonly Lifetime myLifetime;
     [NotNull] private readonly ITaskHost myTaskHost;
 
-    public GotoWordIndexProvider(
-      [NotNull] Lifetime lifetime, [NotNull] ITaskHost taskHost, [NotNull] IShellLocks shellLocks)
+    public GotoWordIndexProvider([NotNull] Lifetime lifetime, [NotNull] ITaskHost taskHost, [NotNull] IShellLocks shellLocks)
     {
       myLifetime = lifetime;
       myTaskHost = taskHost;
       myShellLocks = shellLocks;
     }
 
-    public bool IsApplicable(
-      [NotNull] INavigationScope scope, [NotNull] GotoContext gotoContext, [NotNull] IdentifierMatcher matcher)
+    public bool IsApplicable([NotNull] INavigationScope scope, [NotNull] GotoContext gotoContext, [NotNull] IdentifierMatcher matcher)
     {
       return true;
     }
 
     [NotNull] public IEnumerable<ChainedNavigationItemData> GetNextChainedScopes(
-      [NotNull] GotoContext gotoContext, [NotNull] IdentifierMatcher matcher,
-      [NotNull] INavigationScope containingScope, [NotNull] CheckForInterrupt checkForInterrupt)
+      [NotNull] GotoContext gotoContext, [NotNull] IdentifierMatcher matcher, [NotNull] INavigationScope containingScope, [NotNull] Func<bool> checkForInterrupt)
     {
       return EmptyList<ChainedNavigationItemData>.InstanceList;
     }
@@ -63,8 +57,7 @@ namespace JetBrains.ReSharper.GoToWord
     
 
     [NotNull] public IEnumerable<MatchingInfo> FindMatchingInfos(
-      [NotNull] IdentifierMatcher matcher, [NotNull] INavigationScope scope,
-      [NotNull] GotoContext gotoContext, [NotNull] CheckForInterrupt checkCanceled)
+      [NotNull] IdentifierMatcher matcher, [NotNull] INavigationScope scope, [NotNull] GotoContext gotoContext, [NotNull] Func<bool> checkCanceled)
     {
       var solution = scope.GetSolution();
       if (solution == null) return EmptyList<MatchingInfo>.InstanceList;
@@ -76,7 +69,7 @@ namespace JetBrains.ReSharper.GoToWord
         var consumer = new List<IOccurence>();
         SearchInFile(matcher.Filter, sourceFile, consumer, checkCanceled);
 
-        foreach (var occurence in consumer)
+        foreach (var occurrence in consumer)
         {
           //return new MatchingInfo(matcher.Filter, EmptyList<IdentifierMatch>.InstanceList);
         }
@@ -100,7 +93,7 @@ namespace JetBrains.ReSharper.GoToWord
       if (occurrences.Count > 0)
       {
         gotoContext.PutData(GoToWordOccurrences, occurrences);
-        return new[] {new MatchingInfo(filterText, EmptyList<CombinedLookupItem.IdentifierMatch>.InstanceList)};
+        return new[] {new MatchingInfo(matcher, filterText)};
       }
 
       return EmptyList<MatchingInfo>.InstanceList;
@@ -108,11 +101,10 @@ namespace JetBrains.ReSharper.GoToWord
 
     private void FindByWords(
       [NotNull] string textToSearch, [NotNull] ISolution solution, [NotNull] List<IOccurence> occurrences,
-      [NotNull] UserDataHolder gotoContext, [NotNull] CheckForInterrupt checkCanceled)
+      [NotNull] UserDataHolder gotoContext, [NotNull] Func<bool> checkCanceled)
     {
       var wordIndex = solution.GetPsiServices().WordIndex;
-      var longestWord = wordIndex.GetWords(textToSearch)
-        .OrderByDescending(word => word.Length).FirstOrDefault();
+      var longestWord = wordIndex.GetWords(textToSearch).OrderByDescending(word => word.Length).FirstOrDefault();
 
       if (gotoContext.GetData(GoToWordFirstTimeLookup) == null)
       {
@@ -136,14 +128,9 @@ namespace JetBrains.ReSharper.GoToWord
       }
     }
 
-    private void FindTextual(
-      [NotNull] string searchText, [NotNull] ISolution solution,
-      [NotNull] List<IOccurence> consumer, [NotNull] CheckForInterrupt checkCanceled)
+    private void FindTextual([NotNull] string searchText, [NotNull] ISolution solution, [NotNull] List<IOccurence> consumer, [NotNull] Func<bool> checkCanceled)
     {
-
-
-      using (var fibers = myTaskHost.CreateBarrier(
-        myLifetime, checkCanceled, sync: false, takeReadLock: false))
+      using (var fibers = myTaskHost.CreateBarrier(myLifetime, checkCanceled, sync: false, takeReadLock: false))
       {
         foreach (var psiSourceFile in GetAllSolutionFiles(solution))
         {
@@ -183,8 +170,7 @@ namespace JetBrains.ReSharper.GoToWord
     }
 
     private static void SearchInFile(
-      [NotNull] string searchText, [NotNull] IPsiSourceFile sourceFile,
-      [NotNull] List<IOccurence> consumer, [NotNull] CheckForInterrupt checkCanceled)
+      [NotNull] string searchText, [NotNull] IPsiSourceFile sourceFile, [NotNull] List<IOccurence> consumer, [NotNull] Func<bool> checkCanceled)
     {
       var fileText = sourceFile.Document.GetText();
       if (fileText == null) return;
@@ -207,15 +193,13 @@ namespace JetBrains.ReSharper.GoToWord
     }
 
     public IEnumerable<IOccurence> GetOccurencesByMatchingInfo(
-      [NotNull] MatchingInfo navigationInfo, [NotNull] INavigationScope scope,
-      [NotNull] GotoContext gotoContext, [NotNull] CheckForInterrupt checkForInterrupt)
+      [NotNull] MatchingInfo navigationInfo, [NotNull] INavigationScope scope, [NotNull] GotoContext gotoContext, [NotNull] Func<bool> checkForInterrupt)
     {
       var occurrences = gotoContext.GetData(GoToWordOccurrences);
       return occurrences ?? EmptyList<IOccurence>.InstanceList;
     }
 
-    private bool PrepareWordIndex(
-      [NotNull] ISolution solution, [NotNull] IWordIndex wordIndex, [NotNull] CheckForInterrupt checkCanceled)
+    private bool PrepareWordIndex([NotNull] ISolution solution, [NotNull] IWordIndex wordIndex, [NotNull] Func<bool> checkCanceled)
     {
       var persistentIndexManager = solution.GetComponent<IPersistentIndexManager>();
 
@@ -240,7 +224,7 @@ namespace JetBrains.ReSharper.GoToWord
                 var data = wordCache.Build(sourceFile, false);
                 wordCache.Merge(sourceFile, data);
 
-                persistentIndexManager.OnPersistentCachesUpdated(sourceFile);
+                //persistentIndexManager.OnPersistentCachesUpdated(sourceFile);
               }
             });
           }

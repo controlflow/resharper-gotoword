@@ -1,11 +1,11 @@
 using System.Collections.Generic;
+using JetBrains.Application.ComponentModel;
+using JetBrains.ReSharper.Feature.Services.Tree;
+using JetBrains.ReSharper.Feature.Services.Tree.SectionsManagement;
 using JetBrains.TreeModels;
 using JetBrains.Util;
-using JetBrains.ReSharper.Feature.Services.Tree.SectionsManagement;
-using JetBrains.ReSharper.Feature.Services.Tree;
-using JetBrains.Application.ComponentModel;
 
-namespace JetBrains.ReSharper.GoToWord
+namespace JetBrains.ReSharper.GoToWord.Navigation.Presentation
 {
   [ShellFeaturePart]
   public class GotoWordSectionProvider : OccurenceSectionProvider

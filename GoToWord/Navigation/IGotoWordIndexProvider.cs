@@ -3,6 +3,5 @@ using JetBrains.ReSharper.Feature.Services.Navigation.Goto.ProvidersAPI.ChainedP
 
 namespace JetBrains.ReSharper.GoToWord
 {
-  public interface IGotoWordIndexProvider
-    : IOccurenceNavigationProvider, IChainedSearchProvider { }
+  public interface IGotoWordIndexProvider : IOccurenceNavigationProvider, IChainedSearchProvider { }
 }

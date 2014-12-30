@@ -7,8 +7,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReSharper.GoToWord.R90", "G
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{5926FDAF-99CF-4E6E-A374-68A51925F70B}"
 	ProjectSection(SolutionItems) = preProject
-		GoToWord.nuspec = GoToWord.nuspec
+		build.ps1 = build.ps1
 		Readme.md = Readme.md
+		ReSharper.GoToWord.nuspec = ReSharper.GoToWord.nuspec
 	EndProjectSection
 EndProject
 Global
