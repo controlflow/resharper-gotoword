@@ -4,21 +4,13 @@ using JetBrains.Application;
 using JetBrains.Application.DataContext;
 using JetBrains.DataFlow;
 using JetBrains.Util.Logging;
-using DataConstants = JetBrains.ProjectModel.DataContext.DataConstants;
-
-#if RESHARPER8 || RESHARPER81
-using JetBrains.ReSharper.Features.Common.GoToByName.Controllers;
-using JetBrains.ReSharper.Features.Finding.GoToType;
-#elif RESHARPER9
-using IActionHandler = JetBrains.UI.ActionsRevised.IExecutableAction;
-using JetBrains.ReSharper.Feature.Services.Navigation.Goto.Controllers;
 using JetBrains.ReSharper.Features.Navigation.Features.Goto.GoToType;
-#endif
+using JetBrains.UI.ActionsRevised;
 
 namespace JetBrains.ReSharper.GoToWord.Hacks
 {
   [ShellComponent]
-  public class TripleGoToEverythingActionHandler : IActionHandler
+  public class TripleGoToEverythingActionHandler : IExecutableAction
   {
     [NotNull] private readonly IActionManager myActionManager;
 
@@ -28,20 +20,13 @@ namespace JetBrains.ReSharper.GoToWord.Hacks
 
       const string gotoTypeActionId = "GotoType";
 
-#if RESHARPER8 || RESHARPER81
-      var gotoTypeAction = actionManager.TryGetAction(gotoTypeActionId) as IUpdatableAction;
-      if (gotoTypeAction != null)
-      {
-        gotoTypeAction.AddHandler(lifetime, this);
-      }
-#elif RESHARPER9
       var gotoTypeAction = actionManager.Defs.TryGetActionDefById(gotoTypeActionId);
       if (gotoTypeAction != null)
       {
-        lifetime.AddAction(() => actionManager.Handlers.RemoveHandler(gotoTypeAction, this));
-        actionManager.Handlers.AddHandler(gotoTypeAction, this);
+        lifetime.AddBracket(
+          () => actionManager.Handlers.AddHandler(gotoTypeAction, this),
+          () => actionManager.Handlers.RemoveHandler(gotoTypeAction, this));
       }
-#endif
     }
 
     public bool Update(IDataContext context, ActionPresentation presentation, DelegateUpdate nextUpdate)
@@ -55,14 +40,6 @@ namespace JetBrains.ReSharper.GoToWord.Hacks
       var controller = context.GetData(GotoTypeAction.GotoController);
       if (controller is GotoDeclaredElementController)
       {
-#if RESHARPER8 || RESHARPER81
-        var gotoWordAction = myActionManager.TryGetAction(GotoWordIndexAction.Id) as IExecutableAction;
-        if (gotoWordAction != null)
-        {
-          gotoWordAction.Execute(context);
-          return;
-        }
-#elif RESHARPER9
         var gotoWordAction = myActionManager.Defs.TryGetActionDefById(GotoWordIndexAction.Id);
         if (gotoWordAction != null)
         {
@@ -70,7 +47,6 @@ namespace JetBrains.ReSharper.GoToWord.Hacks
           if (evaluatedAction.IsAvailable) evaluatedAction.Execute();
           return;
         }
-#endif
 
         Logger.LogError("Action '{0}' is not found!", GotoWordIndexAction.Id);
       }

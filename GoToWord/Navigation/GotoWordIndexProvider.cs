@@ -1,3 +1,4 @@
+using JetBrains.UI.Utils;
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -8,26 +9,10 @@ using JetBrains.ReSharper.GoToWord.Hacks;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.Caches;
 using JetBrains.ReSharper.Psi.Modules;
+using JetBrains.ReSharper.Feature.Services.CodeCompletion;
 using JetBrains.Text;
 using JetBrains.Util;
 using JetBrains.DocumentModel;
-
-#if RESHARPER8
-using JetBrains.Application;
-using JetBrains.Application.Env;
-using JetBrains.Application.Threading;
-using JetBrains.ReSharper.Feature.Services.Search;
-using JetBrains.ReSharper.Feature.Services.Navigation.Occurences;
-using JetBrains.ReSharper.Feature.Services.Goto;
-#elif RESHARPER81
-using JetBrains.DataFlow;
-using JetBrains.Application.Threading.Tasks;
-using JetBrains.ReSharper.Feature.Services.Goto;
-using JetBrains.ReSharper.Feature.Services.Navigation.Occurences;
-using JetBrains.ReSharper.Feature.Services.Navigation.Search;
-// NOTE: THANKS UNIVERSE C# CAN DO THAT:
-using CheckForInterrupt = System.Func<bool>;
-#elif RESHARPER9
 using JetBrains.DataFlow;
 using JetBrains.Application.ComponentModel;
 using JetBrains.Application.Threading.Tasks;
@@ -35,8 +20,8 @@ using JetBrains.ReSharper.Feature.Services.Navigation;
 using JetBrains.ReSharper.Feature.Services.Navigation.Goto.Misc;
 using JetBrains.ReSharper.Feature.Services.Navigation.Goto.ProvidersAPI;
 using JetBrains.ReSharper.Feature.Services.Occurences;
+using JetBrains.ReSharper.Resources.Shell;
 using CheckForInterrupt = System.Func<bool>;
-#endif
 
 namespace JetBrains.ReSharper.GoToWord
 {
@@ -45,17 +30,6 @@ namespace JetBrains.ReSharper.GoToWord
   {
     [NotNull] private readonly IShellLocks myShellLocks;
 
-#if RESHARPER8
-    [NotNull] private readonly RunsProducts.ProductConfigurations myConfigurations;
-    const string GoToWordPoolName = "Go to Word search pool";
-
-    public GotoWordIndexProvider(
-      [NotNull] RunsProducts.ProductConfigurations configurations, [NotNull] IShellLocks shellLocks)
-    {
-      myConfigurations = configurations;
-      myShellLocks = shellLocks;
-    }
-#elif RESHARPER81 || RESHARPER9
     [NotNull] private readonly Lifetime myLifetime;
     [NotNull] private readonly ITaskHost myTaskHost;
 
@@ -66,7 +40,6 @@ namespace JetBrains.ReSharper.GoToWord
       myTaskHost = taskHost;
       myShellLocks = shellLocks;
     }
-#endif
 
     public bool IsApplicable(
       [NotNull] INavigationScope scope, [NotNull] GotoContext gotoContext, [NotNull] IdentifierMatcher matcher)
@@ -127,7 +100,7 @@ namespace JetBrains.ReSharper.GoToWord
       if (occurrences.Count > 0)
       {
         gotoContext.PutData(GoToWordOccurrences, occurrences);
-        return new[] {new MatchingInfo(filterText, EmptyList<IdentifierMatch>.InstanceList)};
+        return new[] {new MatchingInfo(filterText, EmptyList<CombinedLookupItem.IdentifierMatch>.InstanceList)};
       }
 
       return EmptyList<MatchingInfo>.InstanceList;
@@ -169,13 +142,8 @@ namespace JetBrains.ReSharper.GoToWord
     {
 
 
-#if RESHARPER8
-      using (var pool = new MultiCoreFibersPool(GoToWordPoolName, myShellLocks, myConfigurations))
-      using (var fibers = pool.Create("Files scan for textual occurances"))
-#elif RESHARPER81 || RESHARPER9
       using (var fibers = myTaskHost.CreateBarrier(
         myLifetime, checkCanceled, sync: false, takeReadLock: false))
-#endif
       {
         foreach (var psiSourceFile in GetAllSolutionFiles(solution))
         {
@@ -251,13 +219,8 @@ namespace JetBrains.ReSharper.GoToWord
     {
       var persistentIndexManager = solution.GetComponent<IPersistentIndexManager>();
 
-#if RESHARPER8
-      using (var pool = new MultiCoreFibersPool(GoToWordPoolName, myShellLocks, myConfigurations))
-      using (var fibers = pool.Create("Updating word index cache"))
-#elif RESHARPER81 || RESHARPER9
       using (var fibers = myTaskHost.CreateBarrier(
         myLifetime, checkCanceled, sync: false, takeReadLock: false))
-#endif
       {
         var wordCache = (ICache) wordIndex;
         foreach (var psiSourceFile in GetAllSolutionFiles(solution))

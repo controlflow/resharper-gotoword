@@ -5,17 +5,10 @@ using JetBrains.Application.Progress;
 using JetBrains.ProjectModel;
 using JetBrains.TreeModels;
 using JetBrains.IDE.TreeBrowser;
-
-#if RESHARPER8
-using JetBrains.ReSharper.Feature.Services.Search;
-using JetBrains.ReSharper.Features.Common.Occurences;
-#elif RESHARPER81
-using JetBrains.ReSharper.Feature.Services.Tree;
-using JetBrains.ReSharper.Feature.Services.Navigation.Search;
-#elif RESHARPER9
+using JetBrains.ReSharper.Resources.Shell;
 using JetBrains.ReSharper.Feature.Services.Tree;
 using JetBrains.ReSharper.Feature.Services.Navigation;
-#endif
+using JetBrains.ReSharper.Feature.Services.Occurences;
 
 namespace JetBrains.ReSharper.GoToWord
 {

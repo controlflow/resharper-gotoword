@@ -1,12 +1,7 @@
 using JetBrains.DataFlow;
 using JetBrains.ProjectModel;
 using JetBrains.UI.GotoByName;
-
-#if RESHARPER8 || RESHARPER81
-using JetBrains.ReSharper.Features.Common.ComponentsAPI;
-#elif RESHARPER9
 using JetBrains.ReSharper.Feature.Services.Navigation.Goto.ProvidersAPI;
-#endif
 
 namespace JetBrains.ReSharper.GoToWord
 {

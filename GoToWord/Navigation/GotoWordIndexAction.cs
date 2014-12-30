@@ -8,36 +8,20 @@ using JetBrains.DataFlow;
 using JetBrains.ProjectModel;
 using JetBrains.UI.Application.Progress;
 using JetBrains.UI.Controls.GotoByName;
-
-#if RESHARPER8
-using JetBrains.ReSharper.Feature.Services.Search;
-using JetBrains.ReSharper.Features.Common.FindResultsBrowser;
-#elif RESHARPER81
-using JetBrains.ReSharper.Feature.Services.Navigation.Search;
-using JetBrains.ReSharper.Feature.Services.Occurences.Presentation;
-#elif RESHARPER9
 using JetBrains.ReSharper.Feature.Services.Navigation.Goto.ProvidersAPI;
 using JetBrains.ReSharper.Feature.Services.Navigation;
 using JetBrains.ReSharper.Feature.Services.Presentation;
 using JetBrains.Application.Threading.Tasks;
+using JetBrains.ReSharper.Feature.Services.Occurences;
+using JetBrains.ReSharper.Resources.Shell;
 using JetBrains.UI.ActionsRevised;
-#endif
 
 namespace JetBrains.ReSharper.GoToWord
 {
-#if RESHARPER8 || RESHARPER81
-
-  [ActionHandler(Id)]
-  public class GotoWordIndexAction : IActionHandler
-  {
-    public const string Id = "GotoWordIndex";
-
-#elif RESHARPER9
   [Action(Id)]
   public class GotoWordIndexAction : IExecutableAction
   {
     public const string Id = "GotoWordIndex";
-#endif
 
     public bool Update(IDataContext context, ActionPresentation presentation, DelegateUpdate nextUpdate)
     {

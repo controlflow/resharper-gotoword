@@ -1,0 +1,27 @@
+﻿<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>ReSharper.GoToWord</id>
+    <version>1.9-beta</version>
+    <title>Go to Word 2 for ReSharper 9.0</title>
+    <authors>Alexander Shvedov</authors>
+    <owners>controlflow</owners>
+    <projectUrl>https://github.com/controlflow/resharper-gotoword</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/controlflow/resharper-gotoword/master/Content/icon.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>
+      Triple [Ctrl]+[T] to search whole solution for any text in any types of project files. Really fast case-insensitive search, powered by ReSharper caches. Standard "find results" dialog with grouping and previews. Can search for text, selected in current file.
+    </description>
+    <copyright>Copyright © Alexander Shvedov, 2015</copyright>
+    <dependencies>
+      <dependency id="Wave" version="[1.0]" />
+    </dependencies>
+    <releaseNotes>
+      GoToWord 2 for ReSharper 9.0.
+    </releaseNotes>
+    <tags>navigation search word words text index cache</tags>
+  </metadata>
+  <files>
+    <file src="GoToWord\bin.R90\$Configuration$\ReSharper.GoToWord.*" target="dotFiles\" />
+  </files>
+</package>

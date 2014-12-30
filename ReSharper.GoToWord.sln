@@ -3,12 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReSharper.GoToWord.R80", "GoToWord\ReSharper.GoToWord.R80.csproj", "{A95C47FD-9460-43B0-82D1-CB6DE6D67981}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReSharper.GoToWord.R81", "GoToWord\ReSharper.GoToWord.R81.csproj", "{BDA0EA27-69DE-4DAB-9983-0DB9CBA24A12}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReSharper.GoToWord.R82", "GoToWord\ReSharper.GoToWord.R82.csproj", "{BB1E89DE-420D-4D5F-8C8F-4D9524F8BC4A}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReSharper.GoToWord.R90", "GoToWord\ReSharper.GoToWord.R90.csproj", "{29D44CFC-9DCD-4BB5-9DA5-71CE207DEC68}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{5926FDAF-99CF-4E6E-A374-68A51925F70B}"
@@ -17,29 +11,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{5926FD
 		Readme.md = Readme.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{D4CBE1DE-10F0-4406-99C9-A3EF9A495C90}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\packages.config = .nuget\packages.config
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A95C47FD-9460-43B0-82D1-CB6DE6D67981}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A95C47FD-9460-43B0-82D1-CB6DE6D67981}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A95C47FD-9460-43B0-82D1-CB6DE6D67981}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A95C47FD-9460-43B0-82D1-CB6DE6D67981}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BDA0EA27-69DE-4DAB-9983-0DB9CBA24A12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BDA0EA27-69DE-4DAB-9983-0DB9CBA24A12}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BDA0EA27-69DE-4DAB-9983-0DB9CBA24A12}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BDA0EA27-69DE-4DAB-9983-0DB9CBA24A12}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BB1E89DE-420D-4D5F-8C8F-4D9524F8BC4A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BB1E89DE-420D-4D5F-8C8F-4D9524F8BC4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BB1E89DE-420D-4D5F-8C8F-4D9524F8BC4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BB1E89DE-420D-4D5F-8C8F-4D9524F8BC4A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{29D44CFC-9DCD-4BB5-9DA5-71CE207DEC68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{29D44CFC-9DCD-4BB5-9DA5-71CE207DEC68}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{29D44CFC-9DCD-4BB5-9DA5-71CE207DEC68}.Release|Any CPU.ActiveCfg = Release|Any CPU
