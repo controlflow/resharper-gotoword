@@ -1,6 +1,12 @@
 ReSharper Go to Word plugin
 ---------------------------
 
+### Status
+
+I'm glad to announce that 'Go to Word' plugin was [reborn as a built-in 'Go to Text' feature in ReSharper 2016.2](https://blog.jetbrains.com/dotnet/2016/08/18/resharper-ultimate-2016-2-is-here/). It provides functionality, similar to original 'Go to Word' plugin, but supports searching for arbitrary strings (not just "words"). This plugin is no longer supported.
+
+![gototext](https://d3nmt5vlzunoa1.cloudfront.net/dotnet/files/2016/08/find_text.png)
+
 #### Features
 
 * Search whole solution for any text in any types of project files with triple `Ctrl`+`T`:
